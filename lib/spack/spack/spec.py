@@ -111,6 +111,7 @@ from llnl.util.tty.color import *
 
 import spack
 import spack.architecture
+import spack.install_area
 import spack.compilers as compilers
 import spack.error
 import spack.parse
@@ -964,7 +965,7 @@ class Spec(object):
 
     @property
     def prefix(self):
-        return Prefix(spack.install_layout.path_for_spec(self))
+        return Prefix(spack.install_area.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
@@ -2326,7 +2327,7 @@ class Spec(object):
                 elif named_str == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % spack.install_path)
+                    out.write(fmt % spack.install_area.path)
 
                 named = False
 
@@ -2521,7 +2522,7 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.installed_db.query()
+        specs = spack.install_area.db.query()
         matches = [spec for spec in specs if
                    spec.dag_hash()[:len(self.token.value)] == self.token.value]
 
