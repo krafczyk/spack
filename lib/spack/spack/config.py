@@ -181,7 +181,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'targets': spack.schema.targets.schema,
     'modules': spack.schema.modules.schema,
-    'install': spack.schema.install.schema,
+    'config': spack.schema.config.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
