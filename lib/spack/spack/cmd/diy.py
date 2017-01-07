@@ -38,6 +38,9 @@ description = "do-it-yourself: build from an existing source directory"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-d', '--source-path', dest='source_path',
+        help="Path to the source directory. Defaults to the current directory")
+    subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
     subparser.add_argument(
@@ -83,8 +86,15 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
+    source_path = None
+    if args.source_path is None:
+        source_path = os.getcwd()
+    else:
+        source_path = args.source_path
+    source_path = os.path.abspath(source_path)
+
     # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+    package.stage = DIYStage(source_path)
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
