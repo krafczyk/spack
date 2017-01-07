@@ -38,6 +38,9 @@ description = "do-it-yourself: build from an existing source directory"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-j', '--jobs', action='store', type=int,
+        help="Explicitly set number of make jobs.  Default is #cpus.")
+    subparser.add_argument(
         '-d', '--source-path', dest='source_path',
         help="Path to the source directory. Defaults to the current directory")
     subparser.add_argument(
@@ -63,6 +66,10 @@ def setup_parser(subparser):
 def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
+
+    if args.jobs is not None:
+        if args.jobs <= 0:
+            tty.die("The -j option must be a positive integer!")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
@@ -100,6 +107,7 @@ def diy(self, args):
     spack.do_checksum = False
 
     package.do_install(
+        make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
