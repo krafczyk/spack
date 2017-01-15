@@ -250,6 +250,7 @@ def database(tmpdir_factory, builtin_mock, config):
             _install('mpileaks ^mpich')
             _install('mpileaks ^mpich2')
             _install('mpileaks ^zmpi')
+            _install('externaltest')
 
     t = Database(
         real=real,
@@ -263,6 +264,7 @@ def database(tmpdir_factory, builtin_mock, config):
         t.install('mpileaks ^mpich')
         t.install('mpileaks ^mpich2')
         t.install('mpileaks ^zmpi')
+        t.install('externaltest')
 
     yield t
 
