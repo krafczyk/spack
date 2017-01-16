@@ -109,12 +109,17 @@ def parse_specs(args, **kwargs):
     normalize = kwargs.get('normalize', False)
 
     try:
+    	tty.msg("(parse_specs) Going to parse: {}".format(args))
         specs = spack.spec.parse(args)
         for spec in specs:
+	    tty.msg("(parse_specs) Looking at spec: {}".format(spec))
             if concretize:
+	    	tty.msg("(parse_specs) We're concretizing")
                 spec.concretize()  # implies normalize
+		tty.msg("(parse_specs) We've finished concretizing")
             elif normalize:
                 spec.normalize()
+	    tty.msg("(parse_specs) Now have spec: {}".format(spec))
 
         return specs
 

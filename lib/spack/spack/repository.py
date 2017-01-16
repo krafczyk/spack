@@ -628,6 +628,7 @@ class Repo(object):
 
         # Read the old ProviderIndex, or make a new one.
         key = self._cache_file
+	tty.msg("key is: {}".format(key))
         index_existed = spack.misc_cache.init_entry(key)
         if index_existed and not self._needs_update:
             with spack.misc_cache.read_transaction(key) as f:
@@ -650,7 +651,9 @@ class Repo(object):
     def provider_index(self):
         """A provider index with names *specific* to this repo."""
         if self._provider_index is None:
+	    tty.msg("updating provider index")
             self._update_provider_index()
+	    tty.msg("updated provider index")
         return self._provider_index
 
     @_autospec

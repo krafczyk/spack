@@ -43,6 +43,7 @@ from spack.version import *
 from functools import partial
 from itertools import chain
 from spack.package_prefs import *
+import llnl.util.tty as tty
 
 
 class DefaultConcretizer(object):
@@ -158,6 +159,7 @@ class DefaultConcretizer(object):
                  some better policy that finds some middle ground
                  between these two extremes.
         """
+
         # return if already concrete.
         if spec.versions.concrete:
             return False

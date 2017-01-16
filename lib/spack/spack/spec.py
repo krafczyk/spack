@@ -1347,6 +1347,7 @@ class Spec(object):
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
+	tty.msg("(_concretize_helper) begin {}".format(self))
         if presets is None:
             presets = {}
         if visited is None:
@@ -1379,6 +1380,7 @@ class Spec(object):
             presets[self.name] = self
 
         visited.add(self.name)
+	tty.msg("(_concretize_helper) end {}".format(self))
         return changed
 
     def _replace_with(self, concrete):
@@ -1412,9 +1414,11 @@ class Spec(object):
               this are infrequent, but should implement this before it is
               a problem.
         """
+	tty.msg("(_expand_virtual_packages) begin {}".format(self))
         # Make an index of stuff this spec already provides
         # XXX(deptype): 'link' and 'run'?
         self_index = ProviderIndex(self.traverse(), restrict=True)
+	tty.msg("(_expand_virtual_packages) self_index {}".format(self_index))
         changed = False
         done = False
 
@@ -1422,8 +1426,10 @@ class Spec(object):
             done = True
             # XXX(deptype): 'link' and 'run'?
             for spec in list(self.traverse()):
+	        tty.msg("(_expand_virtual_packages) looking at {}".format(spec))
                 replacement = None
                 if spec.virtual:
+		    tty.msg("(_expand_virtual_packages) {} is virtual finding a provider.".format(spec))
                     replacement = self._find_provider(spec, self_index)
                     if replacement:
                         # TODO: may break if in-place on self but
@@ -1494,6 +1500,7 @@ class Spec(object):
                 done = False
                 break
 
+	tty.msg("(_expand_virtual_packages) end {}".format(self))
         return changed
 
     def concretize(self):
@@ -1511,6 +1518,7 @@ class Spec(object):
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
 
+	tty.msg("(concretize) Calling concretize. name is: {}".format(self))
         if self._concrete:
             return
 
@@ -1518,6 +1526,7 @@ class Spec(object):
         force = False
 
         while changed:
+	    tty.msg("(concretize) step {}".format(self))
             changes = (self.normalize(force),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
@@ -1646,10 +1655,12 @@ class Spec(object):
         """
         assert(vdep.virtual)
         providers = provider_index.providers_for(vdep)
+	tty.msg("(_find_provider) Providers: {}".format(providers))
 
         # If there is a provider for the vpkg, then use that instead of
         # the virtual package.
         if providers:
+	    tty.msg("(_find_provider) providers list is non empty?")
             # Remove duplicate providers that can concretize to the same
             # result.
             for provider in providers:
@@ -1661,6 +1672,7 @@ class Spec(object):
                 raise MultipleProviderError(vdep, providers)
             return providers[0]
         else:
+	    tty.msg("(_find_provider) providers list is empty?")
             # The user might have required something insufficient for
             # pkg_dep -- so we'll get a conflict.  e.g., user asked for
             # mpi@:1.1 but some package required mpi@2.1:.
@@ -1793,6 +1805,7 @@ class Spec(object):
         if not self.name:
             raise SpecError("Attempting to normalize anonymous spec")
 
+	tty.msg("(normalize) begin {}".format(self))
         if self._normal and not force:
             return False
 
@@ -1825,6 +1838,7 @@ class Spec(object):
 
         # Mark the spec as normal once done.
         self._normal = True
+	tty.msg("(normalize) end {}".format(self))
         return any_change
 
     def normalized(self):

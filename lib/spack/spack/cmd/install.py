@@ -313,6 +313,7 @@ def install(parser, args, **kwargs):
         'dirty': args.dirty
     })
 
+    tty.msg("(install) Package to install: {}".format(args.package))
     # Spec from cli
     specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) == 0:
