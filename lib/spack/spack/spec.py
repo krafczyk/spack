@@ -1353,7 +1353,6 @@ class Spec(object):
         if params:
             d['parameters'] = params
 
-        d['external'] = False
         if self.external:
             d['external'] = {
                 'path': self.external,
@@ -1425,6 +1424,10 @@ class Spec(object):
 
         if 'external' in node:
             spec.external = None
+            # This conditional is needed because sometimes this function is
+            # called with a node already constructed that contains a 'versions'
+            # and 'external' field. Related to virtual packages provider
+            # indexes.
             if node['external']:
                 spec.external = node['external']['path']
                 spec.external_module = node['external']['module']
