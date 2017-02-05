@@ -35,7 +35,6 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 import spack
-from spack.variant import VariantSpec
 import spack.spec
 import spack.compilers
 import spack.architecture
@@ -287,9 +286,8 @@ class DefaultConcretizer(object):
                     # FIXME: check here
                     spec.variants[name] = preferred_variants.get(name)
                 else:
-                    spec.variants[name] = VariantSpec(
-                        variant.name, variant.default
-                    )
+                    spec.variants[name] = variant.make_default()
+
         return changed
 
     def concretize_compiler(self, spec):
