@@ -1802,7 +1802,7 @@ class Spec(object):
                     pkg_variant = pkg_variants[name]
                     pkg_variant.validate_or_raise(v, pkg_cls)
                     spec.variants.substitute(
-                        name, pkg_variant.make_variant(v._original_value)
+                        pkg_variant.make_variant(v._original_value)
                     )
 
     def constrain(self, other, deps=True):
