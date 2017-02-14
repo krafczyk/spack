@@ -219,7 +219,7 @@ MACH_CFLAGS   = \n""")
 		          "-fno-second-underscore "
 		          "-ffixed-line-length-132\n")
 		bcf.write("MACH_F90FLAGS = "
-		          "-fno-second-underscore\n"
+		          "-fno-second-underscore\n")
 		bcf.write("MACH_LDFLAGS = \n")
 	bcf.write("""
 \n
