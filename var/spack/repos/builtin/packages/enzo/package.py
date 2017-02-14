@@ -50,12 +50,14 @@ class Enzo(Package):
     variant("debug", default=False, description="Debug compiling mode")
     variant("high", default=True, description="High compiling mode")
     variant("aggressive", default=False, description="Aggressive compiling mode")
+    variant("cray", default=False, description="Use for compilation on cray computers")
+    variant("bluewaters", default=False, description="Use for compilation on bluewaters")
 
     depends_on('python@:2.7.999', type=('build'))
     depends_on('mercurial', type=('build'))
     depends_on('makedepend', type=('build'))
     depends_on('hdf5@1.8.16', type=('build', 'link', 'run'))
-    depends_on('mpi', type=('build', 'link', 'run'))
+    depends_on('mpi', type=('build', 'link', 'run'), when="~cray")
 
     def install(self, spec, prefix):
         if ((('+warn' in spec) and ('+debug' in spec)) or
@@ -95,8 +97,8 @@ class Enzo(Package):
             remove("Make.mach.spack")
 
         #Write configuration file
-        build_config_file = open("Make.mach.spack", "w")
-        build_config_file.write("""
+        bcf = open("Make.mach.spack", "w")
+        bcf.write("""
 #=======================================================================\n
 #\n
 # FILE:        Make.mach.spack\n
@@ -121,13 +123,17 @@ MACH_FILE  = Make.mach.spack\n
 \n
 """ % sys_type())
 
-        mpi_prefix = spec['mpi'].prefix
+	if "+cray" in spec:
+        	bcf.write("LOCAL_MPI_INSTALL = \n")
+	else:
+        	mpi_prefix = spec['mpi'].prefix
+        	bcf.write("LOCAL_MPI_INSTALL = %s\n" % mpi_prefix)
         hdf5_prefix = spec['hdf5'].prefix
-        build_config_file.write("LOCAL_MPI_INSTALL = %s\n" % mpi_prefix)
-        build_config_file.write("LOCAL_HDF5_INSTALL = %s\n" % hdf5_prefix)
-        build_config_file.write("LOCAL_GRACKLE_INSTALL = /usr/local\n")
+        bcf.write("LOCAL_HDF5_INSTALL = %s\n" % hdf5_prefix)
+	python_prefix = spec['python'].prefix
+	bcf.write("LOCAL_PYTHON_INSTALL = %s\n" % python_prefix)
 
-        build_config_file.write("""
+        bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Compiler settings\n
@@ -136,26 +142,53 @@ MACH_FILE  = Make.mach.spack\n
 MACH_CPP       = cpp # C preprocessor command\n
 \n
 # With MPI\n
-\n
-MACH_CC_MPI    = mpicc # C compiler when using MPI\n
-MACH_CXX_MPI   = mpic++ # C++ compiler when using MPI\n
-MACH_FC_MPI    = gfortran # Fortran 77 compiler when using MPI\n
-MACH_F90_MPI   = gfortran # Fortran 90 compiler when using MPI\n
-MACH_LD_MPI    = mpic++ # Linker when using MPI\n
-\n
-# Without MPI\n
-\n
-MACH_CC_NOMPI  = gcc # C compiler when not using MPI\n
-MACH_CXX_NOMPI = g++ # C++ compiler when not using MPI\n
-MACH_FC_NOMPI  = gfortran # Fortran 77 compiler when not using MPI\n
-MACH_F90_NOMPI = gfortran # Fortran 90 compiler when not using MPI\n
-MACH_LD_NOMPI  = g++ # Linker when not using MPI\n
+\n""")
+
+	if "+cray" in spec:
+		bcf.write("MACH_CC_MPI = cc\n")
+		bcf.write("MACH_CXX_MPI = CC\n")
+		bcf.write("MACH_FC_MPI = ftn\n")
+		bcf.write("MACH_F90_MPI = ftn\n")
+		bcf.write("MACH_LD_MPI = CC\n")
+		bcf.write("\n")
+		bcf.write("# Without MPI\n")
+		bcf.write("\n")
+		bcf.write("MACH_CC_NOMPI = cc\n")
+		bcf.write("MACH_CXX_NOMPI = CC\n")
+		bcf.write("MACH_FC_NOMPI = ftn\n")
+		bcf.write("MACH_F90_NOMPI = ftn\n")
+		bcf.write("MACH_LD_NOMPI = CC\n")
+	else:
+		bcf.write("MACH_CC_MPI = mpicc\n")
+		bcf.write("MACH_CXX_MPI = mpic++\n")
+		bcf.write("MACH_FC_MPI = gfortran\n")
+		bcf.write("MACH_F90_MPI = gfortran\n")
+		bcf.write("MACH_LD_MPI = mpic++\n")
+		bcf.write("\n")
+		bcf.write("# Without MPI\n")
+		bcf.write("\n")
+		bcf.write("MACH_CC_NOMPI = gcc\n")
+		bcf.write("MACH_CXX_NOMPI = g++\n")
+		bcf.write("MACH_FC_NOMPI = gfortran\n")
+		bcf.write("MACH_F90_NOMPI = gfortran\n")
+		bcf.write("MACH_LD_NOMPI = g++\n")
+
+	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Machine-dependent defines\n
 #-----------------------------------------------------------------------\n
-\n
-MACH_DEFINES   = -DLINUX -DH5_USE_16_API \n
+\n""")
+
+	if "+cray" in spec:
+		bcf.write("MACH_DEFINES = -DNO_IO_LOG"
+		          " -DSYSCALL -DH5_USE_16_API "
+		          "-DLINUX\n")
+	else:
+		bcf.write("MACH_DEFINES = -DLINUX "
+		          "-DH5_USE_16_API\n")
+
+	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Compiler flag settings\n
@@ -163,54 +196,87 @@ MACH_DEFINES   = -DLINUX -DH5_USE_16_API \n
 \n
 \n
 MACH_CPPFLAGS = -P -traditional \n
-MACH_CFLAGS   = \n
-MACH_CXXFLAGS = -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX\n
-MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132\n
-MACH_F90FLAGS = -fno-second-underscore\n
-MACH_LDFLAGS  = \n
+MACH_CFLAGS   = \n""")
+
+	if 'mpich' in spec.dependencies():
+		bcf.write("MACH_CXXFLAGS = "
+		          "-DMPICH_IGNORE_CXX_SEEK "
+		          "-DMPICH_SKIP_MPICXX\n")
+	else:
+		bcf.write("MACH_CXXFLAGS = \n")
+	
+	if '+cray' in spec:
+		bcf.write("MACH_FFLAGS = "
+		          "-fno-second-underscore "
+		          "-ffixed-line-length-132 "
+		          "-m64\n")
+		bcf.write("MACH_F90FLAGS = "
+		          "-fno-second-underscore "
+		          "-m64\n")
+		bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+	else:
+		bcf.write("MACH_FFLAGS = "
+		          "-fno-second-underscore "
+		          "-ffixed-line-length-132\n")
+		bcf.write("MACH_F90FLAGS = "
+		          "-fno-second-underscore\n"
+		bcf.write("MACH_LDFLAGS = \n")
+	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Optimization flags\n
 #-----------------------------------------------------------------------\n
-\n
-MACH_OPT_WARN        = -Wall -g\n
-MACH_OPT_DEBUG       = -g\n
-MACH_OPT_HIGH        = -O2\n
-MACH_OPT_AGGRESSIVE  = -O3 -g\n
+\n""")
+
+	bcf.write("MACH_OPT_WARN        = -Wall\n")
+	bcf.write("MACH_OPT_DEBUG        = -g\n")
+	if "+bluewaters" in spec:
+		bcf.write("MACH_OPT_HIGH = -O2 "
+		          "-finline-functions -fwhole-program "
+		          "-flto -march=bdver1 -mtune=bdver1 "
+		          "-mprefer-avx128 -ftree-vectorize\n")
+	else:
+		bcf.write("MACH_OPT_HIGH = -O2\n")
+	bcf.write("MACH_OPT_AGGRESSIVE = -O3\n")
+	build_config_File.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Includes\n
 #-----------------------------------------------------------------------\n
-\n
-LOCAL_INCLUDES_MPI    = -I$(LOCAL_MPI_INSTALL)/include # MPI includes\n
-LOCAL_INCLUDES_HDF5   = -I$(LOCAL_HDF5_INSTALL)/include # HDF5 includes\n
-LOCAL_INCLUDES_HYPRE  = # hypre includes\n
-LOCAL_INCLUDES_PAPI   = # PAPI includes\n
-LOCAL_INCLUDES_GRACKLE = -I$(LOCAL_GRACKLE_INSTALL)/include\n
-\n
-MACH_INCLUDES         = $(LOCAL_INCLUDES_MPI) $(LOCAL_INCLUDES_HDF5)\n
-MACH_INCLUDES_MPI     = $(LOCAL_INCLUDES_MPI)\n
-MACH_INCLUDES_HYPRE   = $(LOCAL_INCLUDES_HYPRE)\n
-MACH_INCLUDES_PAPI    = $(LOCAL_INCLUDES_PAPI)\n
-MACH_INCLUDES_GRACKLE  = $(LOCAL_INCLUDES_GRACKLE)\n
+\n""")
+	if "+cray" in spec:
+		bcf.write("LOCAL_INCLUDES_MPI = \n")
+	else:
+		bcf.write("LOCAL_INCLUDES_MPI = -I$(LOCAL_MPI_INSTALL)/include\n")
+	bcf.write("LOCAL_INCLUDES_HDF5 = -I$(LOCAL_HDF5_INSTALL)/include\n")
+	bcf.write("LOCAL_INCLUDES_HYPRE = \n")
+	bcf.write("\n")
+	bcf.write("MACH_INCLUDES = $(LOCAL_INCLUDES_MPI) $(LOCAL_INCLUDES_HDF5)\n")
+	bcf.write("MACH_INCLUDES_MPI = $(LOCAL_INCLUDES_MPI)\n")
+	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Libraries\n
 #-----------------------------------------------------------------------\n
-\n
-LOCAL_LIBS_MPI    = -L$(LOCAL_MPI_INSTALL)/lib -lmpi -lmpicxx # MPI libraries\n
-LOCAL_LIBS_HDF5   = -L$(LOCAL_HDF5_INSTALL)/lib -lhdf5 -lz # HDF5 libraries\n
-LOCAL_LIBS_HYPRE  = # hypre libraries\n
-LOCAL_LIBS_PAPI   = # PAPI libraries\n
-LOCAL_LIBS_MACH   = -lgfortran # Machine-dependent libraries\n
-LOCAL_LIBS_GRACKLE = -L$(LOCAL_GRACKLE_INSTALL)/lib -lgrackle\n
+\n""")
+
+	if "+cray" in spec:
+		bcf.write("LOCAL_LIBS_MPI = \n")
+	else:
+		bcf.write("LOCAL_LIBS_MPI = -L$(LOCAL_MPI_INSTALL)/lib "
+			  "-lmpi -lmpicxx\n")
+	bcf.write("LOCAL_LIBS_HDF5 = -L$(LOCAL_HDF5_INSTALL)/lib "
+		  "-lhdf5 -lz\n")
+	bcf.write("\n")
+	if "+cray" in spec:
+		bcf.write("LOCAL_LIBS_MACH = \n")
+	else:
+		bcf.write("LOCAL_LIBS_MACH = -lgfortran\n")
+	bcf.write("""
 \n
 MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)\n
-MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)\n
-MACH_LIBS_HYPRE   = $(LOCAL_LIBS_HYPRE)\n
-MACH_LIBS_PAPI    = $(LOCAL_LIBS_PAPI)\n
-MACH_LIBS_GRACKLE = $(LOCAL_LIBS_GRACKLE)\n""")
-        build_config_file.close()
+MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)\n""")
+        bcf.close()
 
         # Set machine options
         make("machine-spack")
