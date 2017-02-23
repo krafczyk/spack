@@ -54,6 +54,7 @@ class PyYt(PythonPackage):
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
     variant("rockstar", default=False, description="enable rockstar support")
+    variant("devmode", default=False, description="enable devmode support")
 
     depends_on("py-astropy", type=('build', 'run'), when="+astropy")
     depends_on("py-cython", type=('build', 'run'))
@@ -66,6 +67,17 @@ class PyYt(PythonPackage):
     depends_on("py-sympy", type=('build', 'run'))
     depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
     depends_on("python @2.7:2.999,3.4:")
+    
+    @run_before('install')
+    def prep_yt(self, spec, prefix):
+        if '+rockstar' in spec:
+            if os.path.exists('rockstar.cfg'):
+                os.remove('rockstar.cfg')
+            rockstar_cfg = open('rockstar.cfg', 'w')
+            rockstar_cfg.write(spec.get_dependency('rockstar').spec.prefix)
+            rockstar_cfg.close()
+        if '+devmode' in spec:
+            self.install_word = 'develop'
 
     @run_after('install')
     def check_install(self):
@@ -73,12 +85,3 @@ class PyYt(PythonPackage):
         # yt = Executable(join_path(prefix.bin, "yt"))
         # yt("--help")
         python(join_path(self.prefix.bin, "yt"), "--help")
-
-    @run_before('install')
-    def prep_rockstar(self, spec, prefix):
-        if '+rockstar' in spec:
-            if os.path.exists('rockstar.cfg'):
-                os.remove('rockstar.cfg')
-            rockstar_cfg = open('rockstar.cfg', 'w')
-            rockstar_cfg.write(spec.get_dependency('rockstar').spec.prefix)
-            rockstar_cfg.close()

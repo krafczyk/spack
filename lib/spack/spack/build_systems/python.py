@@ -94,8 +94,12 @@ class PythonPackage(PackageBase):
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
-
+    
     extends('python')
+
+    def __init__(self, spec):
+        self.install_word = 'install'
+        super(PythonPackage, self).__init__(spec)
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
@@ -180,7 +184,7 @@ class PythonPackage(PackageBase):
         """Install everything from build directory."""
         args = self.install_args(spec, prefix)
 
-        self.setup_py('install', *args)
+        self.setup_py(self.install_word, *args)
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
