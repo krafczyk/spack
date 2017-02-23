@@ -107,6 +107,7 @@ class Cray(Platform):
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)
+	env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
 
     @classmethod
     def detect(cls):
