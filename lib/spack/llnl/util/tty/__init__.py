@@ -22,21 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import os
-import textwrap
 import fcntl
-import termios
+import os
 import struct
+import sys
+import termios
+import textwrap
 import traceback
 from StringIO import StringIO
 
 from llnl.util.tty.color import *
 
-_debug   = False
+_debug = False
 _verbose = False
 _stacktrace = False
-indent  = "  "
+indent = "  "
 
 
 def is_verbose():
@@ -93,13 +93,13 @@ def msg(message, *args, **kwargs):
     else:
         cwrite("@*b{%s==>} %s" % (st_text, cescape(message)))
     for arg in args:
-        print indent + str(arg)
+        print(indent + str(arg))
 
 
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
-    wrap   = kwargs.get('wrap', False)
+    wrap = kwargs.get('wrap', False)
     break_long_words = kwargs.get('break_long_words', False)
     st_countback = kwargs.get('countback', 3)
 
@@ -201,7 +201,7 @@ def get_yes_or_no(prompt, **kwargs):
         if not ans:
             result = default_value
             if result is None:
-                print "Please enter yes or no."
+                print("Please enter yes or no.")
         else:
             if ans == 'y' or ans == 'yes':
                 result = True
@@ -216,7 +216,7 @@ def hline(label=None, **kwargs):
        char       Char to draw the line with.  Default '-'
        max_width  Maximum width of the line.  Default is 64 chars.
     """
-    char      = kwargs.pop('char', '-')
+    char = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
     if kwargs:
         raise TypeError(
@@ -239,7 +239,7 @@ def hline(label=None, **kwargs):
     out.write(label)
     out.write(suffix)
 
-    print out.getvalue()
+    print(out.getvalue())
 
 
 def terminal_size():

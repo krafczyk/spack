@@ -27,7 +27,8 @@ from spack import *
 
 class Cdo(Package):
     """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+    Climate and NWP model Data.
+    """
 
     homepage = "https://code.zmaw.de/projects/cdo"
 
@@ -54,7 +55,7 @@ class Cdo(Package):
     depends_on('proj', when='+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw', when='+fftw')
-    depends_on('magics', when='+magics') 
+    depends_on('magics', when='+magics')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
