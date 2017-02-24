@@ -189,14 +189,12 @@ MACH_CPP       = cpp # C preprocessor command\n
 MACH_CPPFLAGS = -P -traditional \n
 MACH_CFLAGS   = \n""")
 
-        tty.msg("spec.dependencies: {}".format(type(spec.dependencies())))
-	#if 'mpich' in spec.dependencies():
-	#	bcf.write("MACH_CXXFLAGS = "
-	#	          "-DMPICH_IGNORE_CXX_SEEK "
-	#	          "-DMPICH_SKIP_MPICXX\n")
-	#else:
-	#	bcf.write("MACH_CXXFLAGS = \n")
-	bcf.write("MACH_CXXFLAGS = \n")
+	if spec.satisfies("^mpich"):
+		bcf.write("MACH_CXXFLAGS = "
+		          "-DMPICH_IGNORE_CXX_SEEK "
+		          "-DMPICH_SKIP_MPICXX\n")
+	else:
+		bcf.write("MACH_CXXFLAGS = \n")
 	
 	if '+cray' in spec:
 		bcf.write("MACH_FFLAGS = "
