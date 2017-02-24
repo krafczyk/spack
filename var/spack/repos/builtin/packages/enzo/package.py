@@ -46,10 +46,8 @@ class Enzo(Package):
     version("2.1.1", "0fe775d0a05d5e434b7d1c3e927146d2")
     version("2.1.0", "224a426312af03a573c2087b6d94a2d4")
     
-    variant("warn", default=False, description="Warn compiling mode")
-    variant("debug", default=False, description="Debug compiling mode")
-    variant("high", default=True, description="High compiling mode")
-    variant("aggressive", default=False, description="Aggressive compiling mode")
+    variant("mode", default='debug', values=('warn', 'debug', 'high', 'aggressive'),
+            exclusive=True, validator=None)
     variant("cray", default=False, description="Use for compilation on cray computers")
     variant("bluewaters", default=False, description="Use for compilation on bluewaters")
 
@@ -60,24 +58,17 @@ class Enzo(Package):
     depends_on('mpi', type=('build', 'link', 'run'), when="~cray")
 
     def install(self, spec, prefix):
-        if ((('+warn' in spec) and ('+debug' in spec)) or
-            (('+warn' in spec) and ('+high' in spec)) or
-            (('+warn' in spec) and ('+aggressive' in spec)) or
-            (('+debug' in spec) and ('+high' in spec)) or
-            (('+debug' in spec) and ('+aggressive' in spec)) or
-            (('+high' in spec) and ('+aggressive' in spec))):
-            raise InstallError("Can only specify one of" 
-                "+warn,+debug,+high,and+aggressive")
-
         build_option = ""
-        if '+warn' in spec:
+        if self.spec.satisfies('mode=warn'):
             build_option = 'opt-warn'
-        elif '+debug' in spec:
+        elif self.spec.satisfies('mode=debug'):
             build_option = 'opt-debug'
-        elif '+high' in spec:
+        elif self.spec.satisfies('mode=high'):
             build_option = 'opt-high'
-        elif '+aggressive' in spec:
+        elif self.spec.satisfies('mode=aggressive'):
             build_option = 'opt-aggressive'
+        else:
+            raise InstallError("mode wasn't found in spec (%s) !" % self.spec);
 
         # destroy old bin
         if os.path.exists("bin"):
@@ -198,12 +189,14 @@ MACH_CPP       = cpp # C preprocessor command\n
 MACH_CPPFLAGS = -P -traditional \n
 MACH_CFLAGS   = \n""")
 
-	if 'mpich' in spec.dependencies():
-		bcf.write("MACH_CXXFLAGS = "
-		          "-DMPICH_IGNORE_CXX_SEEK "
-		          "-DMPICH_SKIP_MPICXX\n")
-	else:
-		bcf.write("MACH_CXXFLAGS = \n")
+        tty.msg("spec.dependencies: {}".format(type(spec.dependencies())))
+	#if 'mpich' in spec.dependencies():
+	#	bcf.write("MACH_CXXFLAGS = "
+	#	          "-DMPICH_IGNORE_CXX_SEEK "
+	#	          "-DMPICH_SKIP_MPICXX\n")
+	#else:
+	#	bcf.write("MACH_CXXFLAGS = \n")
+	bcf.write("MACH_CXXFLAGS = \n")
 	
 	if '+cray' in spec:
 		bcf.write("MACH_FFLAGS = "
@@ -238,7 +231,7 @@ MACH_CFLAGS   = \n""")
 	else:
 		bcf.write("MACH_OPT_HIGH = -O2\n")
 	bcf.write("MACH_OPT_AGGRESSIVE = -O3\n")
-	build_config_File.write("""
+	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
 # Includes\n
