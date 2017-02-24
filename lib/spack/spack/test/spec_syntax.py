@@ -245,21 +245,36 @@ class TestSpecSyntax(object):
 
         # Make sure the database is still the shape we expect
         assert len(specs) > 10
-        assert specs[4].name in specs[10]
-        assert specs[-1].name in specs[10]
 
-        spec1 = sp.Spec(specs[10].name + '^/' + hashes[4])
-        assert specs[4].name in spec1 and spec1[specs[4].name] == specs[4]
-        spec2 = sp.Spec(specs[10].name + '%' + str(specs[10].compiler) +
-                        ' ^ / ' + hashes[-1])
-        assert (specs[-1].name in spec2 and
-                spec2[specs[-1].name] == specs[-1] and
-                spec2.compiler == specs[10].compiler)
-        spec3 = sp.Spec(specs[10].name + '^/' + hashes[4][:4] +
-                        '^ / ' + hashes[-1][:5])
-        assert (specs[-1].name in spec3 and
-                spec3[specs[-1].name] == specs[-1] and
-                specs[4].name in spec3 and spec3[specs[4].name] == specs[4])
+        fake_idx = [specs.index(x) for x in specs if x.name == 'fake'][0]
+        mpileaks_idx = [
+            specs.index(x) for x in specs if x.name == 'mpileaks'
+        ][1]
+        zmpi_idx = [specs.index(x) for x in specs if x.name == 'zmpi'][0]
+
+        assert specs[fake_idx].name in specs[mpileaks_idx]
+        assert specs[zmpi_idx].name in specs[mpileaks_idx]
+
+        spec1 = sp.Spec(specs[mpileaks_idx].name + '^/' + hashes[fake_idx])
+        assert specs[fake_idx].name in spec1
+        assert spec1[specs[fake_idx].name] == specs[fake_idx]
+        spec2 = sp.Spec(
+            specs[mpileaks_idx].name +
+            '%' + str(specs[mpileaks_idx].compiler) +
+            ' ^ / ' + hashes[zmpi_idx]
+        )
+        assert (specs[zmpi_idx].name in spec2 and
+                spec2[specs[zmpi_idx].name] == specs[zmpi_idx] and
+                spec2.compiler == specs[mpileaks_idx].compiler)
+        spec3 = sp.Spec(
+            specs[mpileaks_idx].name + '^/' +
+            hashes[fake_idx][:4] +
+            '^ / ' + hashes[zmpi_idx][:5]
+        )
+        assert specs[zmpi_idx].name in spec3
+        assert spec3[specs[zmpi_idx].name] == specs[zmpi_idx]
+        assert specs[fake_idx].name in spec3
+        assert spec3[specs[fake_idx].name] == specs[fake_idx]
 
     def test_multiple_specs_with_hash(self, database):
         specs = database.mock.db.query()
