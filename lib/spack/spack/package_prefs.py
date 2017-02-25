@@ -223,8 +223,6 @@ def spec_externals(spec):
         if not module:
             continue
 
-        path = get_path_from_module(module)
-
         external_spec = spack.spec.Spec(
             external_spec, external=True, external_module=module)
         if external_spec.satisfies(spec):
