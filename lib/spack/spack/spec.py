@@ -1609,6 +1609,9 @@ class Spec(object):
             done = True
             for spec in list(self.traverse()):
                 replacement = None
+                if spec.external:
+                    done = True
+                    break
                 if spec.virtual:
                     replacement = self._find_provider(spec, self_index)
                     if replacement:
