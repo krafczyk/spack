@@ -185,7 +185,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         if spec.external:
-            return spec.external
+            return spec.external_path
 
         dir_name = "%s-%s-%s" % (
             spec.name,
