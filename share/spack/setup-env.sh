@@ -196,7 +196,7 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | xargs basename
+    ps -p $$ | tail -n 1 | awk '{print $4}' | xargs basename
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 
@@ -204,28 +204,28 @@ export SPACK_SHELL=$(_spack_determine_shell)
 # Check whether at least one of 'use' and 'module' exists
 #
 function _spack_fn_exists() {
-	type $1 2>&1 | grep -q 'shell function'
+    type $1 2>&1 | grep -q 'shell function'
 }
 
 need_module="no"
 if [ ! $(_spack_fn_exists use) ]; then
-	if [ ! $(_spack_fn_exists module) ]; then
-		need_module="yes"
-	fi;
+    if [ ! $(_spack_fn_exists module) ]; then
+        need_module="yes"
+    fi;
 fi;
 
 #
 # build and make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-	#check if environment-modules~X is installed
-	module_prefix=`spack location -i environment-modules~X 2>&1`
-	if [ $? -eq 0 ]; then
-		#activate it!
-		export MODULE_PREFIX=${module_prefix}
-		module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-	fi;
-
+    #check if environment-modules~X is installed
+    module_prefix=`spack location -i environment-modules~X 2>&1`
+    if [ $? -eq 0 ]; then
+        #activate it!
+        export MODULE_PREFIX=${module_prefix}
+        _spack_pathadd PATH ${MODULE_PREFIX}/Modules/bin/modulecmd
+        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+    fi;
 fi;
 
 #
@@ -239,7 +239,7 @@ _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 
 # Export spack function so it is available in subshells (only works with bash)
 if [ -n "${BASH_VERSION:-}" ]; then
-	export -f spack
+    export -f spack
 fi
 
 # Add programmable tab completion for Bash
