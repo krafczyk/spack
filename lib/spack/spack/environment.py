@@ -70,6 +70,18 @@ class UnsetEnv(NameModifier):
         os.environ.pop(self.name, None)
 
 
+class LoadModule(NameModifier):
+
+    def execute(self):
+        tty.warn("LoadModule execute not yet implemented")
+
+
+class UnloadModule(NameModifier):
+
+    def execute(self):
+        tty.warn("UnloadModule execute not yet implemented")
+
+
 class SetPath(NameValueModifier):
 
     def execute(self):
@@ -170,6 +182,34 @@ class EnvironmentModifications(object):
         kwargs.update(self._get_outside_caller_attributes())
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
+
+    def load(self, name, **kwargs):
+        """
+        Stores in the current object a request to load a module
+
+        Args:
+            name: name of the module to load
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = LoadModule(name, **kwargs)
+	if kwargs.get('first', False):
+            self.env_modifications.insert(0,item)
+	else:
+            self.env_modifications.append(item)
+
+    def unload(self, name, **kwargs):
+        """
+        Stores in the current object a request to unload a module
+
+        Args:
+            name: name of the module to unload
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = UnloadModule(name, **kwargs)
+	if kwargs.get('first', False):
+            self.env_modifications.insert(0,item)
+	else:
+            self.env_modifications.append(item)
 
     def unset(self, name, **kwargs):
         """
