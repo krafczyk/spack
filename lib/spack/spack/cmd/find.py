@@ -58,6 +58,10 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='show_flags',
                            help='show spec compiler flags')
+    subparser.add_argument('-F', '--show-full-compiler',
+                           action='store_true',
+                           dest='show_full_compiler',
+                           help='show full compiler specs')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
         '-e', '--explicit',
@@ -131,5 +135,6 @@ def find(parser, args):
                   long=args.long,
                   very_long=args.very_long,
                   show_flags=args.show_flags,
+                  show_full_compiler=args.show_full_compiler,
                   namespace=args.namespace,
                   variants=args.variants)
