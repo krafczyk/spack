@@ -55,7 +55,7 @@ class Enzo(Package):
     depends_on('mercurial', type=('build'))
     depends_on('makedepend', type=('build'))
     depends_on('hdf5@1.8.16', type=('build', 'link', 'run'))
-    depends_on('mpi', type=('build', 'link', 'run'), when="~cray")
+    depends_on('mpi', type=('build', 'link', 'run'))
 
     def install(self, spec, prefix):
         build_option = ""
