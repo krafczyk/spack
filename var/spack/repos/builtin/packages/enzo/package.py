@@ -189,7 +189,7 @@ MACH_CPP       = cpp # C preprocessor command\n
 MACH_CPPFLAGS = -P -traditional \n
 MACH_CFLAGS   = \n""")
 
-	if spec.satisfies("^mpich"):
+        if spec.satisfies("^mpich") or spec.satisfies("^cray-mpi") or spec.satisfies("^cray-mpich"):
 		bcf.write("MACH_CXXFLAGS = "
 		          "-DMPICH_IGNORE_CXX_SEEK "
 		          "-DMPICH_SKIP_MPICXX\n")
