@@ -113,7 +113,7 @@ def loads(mtype, specs, args):
     """Prompt the list of modules associated with a list of specs"""
 
     # We need modulecmd since we need to inspect some module files.
-    modulecmd = which('modulecmd')
+    modulecmd = which('modulecmd', required=True)
     modulecmd.add_default_arg('python')
 
     # Get a comprehensive list of specs
