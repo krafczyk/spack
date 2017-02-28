@@ -245,5 +245,7 @@ fi
 # Add programmable tab completion for Bash
 #
 if [ -n "${BASH_VERSION:-}" ]; then
-    source $_sp_share_dir/spack-completion.bash
+    if [ $(echo ${BASH_VERSION:-} | cut -c 1) -gt 3 ]; then
+        source $_sp_share_dir/spack-completion.bash
+    fi;
 fi
