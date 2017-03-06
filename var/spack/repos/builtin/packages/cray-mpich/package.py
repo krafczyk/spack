@@ -36,3 +36,15 @@ class CrayMpich(AutotoolsPackage):
 
     provides('mpi@:3.0', when='@6:')
     provides('mpi@:1.3', when='@6:')
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('MPICC',  spack_cc)
+        spack_env.set('MPICXX', spack_cxx)
+        spack_env.set('MPIF77', spack_fc)
+        spack_env.set('MPIF90', spack_fc)
+
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc = spack_cc
+        self.spec.mpicxx = spack_cxx
+        self.spec.mpifc = spack_fc
+        self.spec.mpif77 = spack_f77
