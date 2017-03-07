@@ -197,14 +197,21 @@ MACH_CFLAGS   = \n""")
 		bcf.write("MACH_CXXFLAGS = \n")
 	
 	if '+cray' in spec:
-		bcf.write("MACH_FFLAGS = "
-		          "-fno-second-underscore "
-		          "-ffixed-line-length-132 "
-		          "-m64\n")
-		bcf.write("MACH_F90FLAGS = "
-		          "-fno-second-underscore "
-		          "-m64\n")
-		bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+		if spec.satisfies("%pgi"):
+			bcf.write("MACH_FFLAGS = "
+		                  "-m64\n")
+			bcf.write("MACH_F90FLAGS = "
+		                  "-m64\n")
+			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+		else:
+			bcf.write("MACH_FFLAGS = "
+		                  "-fno-second-underscore "
+		                  "-ffixed-line-length-132 "
+		                  "-m64\n")
+			bcf.write("MACH_F90FLAGS = "
+		                  "-fno-second-underscore "
+		                  "-m64\n")
+			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
 	else:
 		bcf.write("MACH_FFLAGS = "
 		          "-fno-second-underscore "
