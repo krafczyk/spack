@@ -223,7 +223,7 @@ if [ "${need_module}" = "yes" ]; then
     if [ $? -eq 0 ]; then
         #activate it!
         export MODULE_PREFIX=${module_prefix}
-        _spack_pathadd PATH ${MODULE_PREFIX}/Modules/bin/modulecmd
+        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
     fi;
 fi;
