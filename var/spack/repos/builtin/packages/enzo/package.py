@@ -54,7 +54,7 @@ class Enzo(Package):
     depends_on('python@:2.7.999', type=('build'))
     depends_on('mercurial', type=('build'))
     depends_on('makedepend', type=('build'))
-    depends_on('hdf5@1.8.16', type=('build', 'link', 'run'))
+    depends_on('hdf5@1.8.16+mpi', type=('build', 'link', 'run'))
     depends_on('mpi', type=('build', 'link', 'run'))
 
     def install(self, spec, prefix):
@@ -193,6 +193,9 @@ MACH_CFLAGS   = \n""")
 		bcf.write("MACH_CXXFLAGS = "
 		          "-DMPICH_IGNORE_CXX_SEEK "
 		          "-DMPICH_SKIP_MPICXX\n")
+        elif spec.satisfies("^openmpi"):
+                bcf.write("MACH_CXXFLAGS = "
+                          "-DOMPI_SKIP_MPICXX\n")
 	else:
 		bcf.write("MACH_CXXFLAGS = \n")
 	
@@ -261,6 +264,10 @@ MACH_CFLAGS   = \n""")
 	if "+cray" in spec:
 		bcf.write("LOCAL_LIBS_MPI = \n")
 	else:
+            if spec.satisfies("^openmpi"):
+		bcf.write("LOCAL_LIBS_MPI = -L$(LOCAL_MPI_INSTALL)/lib "
+			  "-lmpi -lmpi_cxx\n")
+            else:
 		bcf.write("LOCAL_LIBS_MPI = -L$(LOCAL_MPI_INSTALL)/lib "
 			  "-lmpi -lmpicxx\n")
 	bcf.write("LOCAL_LIBS_HDF5 = -L$(LOCAL_HDF5_INSTALL)/lib "
