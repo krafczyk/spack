@@ -52,6 +52,8 @@ class Perl(Package):
     # things cleanly.
     variant('cpanm', default=True,
             description='Optionally install cpanm with the core packages.')
+    variant('pic', default=True,
+            description='avoid -fPIC errors')
 
     resource(
         name="cpanm",
@@ -63,7 +65,10 @@ class Perl(Package):
 
     def install(self, spec, prefix):
         configure = Executable('./Configure')
-        configure("-des", "-Dprefix=" + prefix)
+        if '+pic' in spec:
+            configure("-des", "-Dprefix=" + prefix, "-Accflags='-fPIC'")
+        else:
+            configure("-des", "-Dprefix=" + prefix)
         make()
         if self.run_tests:
             make("test")

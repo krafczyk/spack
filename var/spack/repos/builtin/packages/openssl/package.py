@@ -61,6 +61,8 @@ class Openssl(Package):
 
     # 'make test' requires Test::More version 0.96
     depends_on('perl@5.14.0:', type='build')
+    #depends_on('sed', type='build', when='%pgi')
+    #depends_on('findutils', type='build', when='%pgi')
 
     parallel = False
 
@@ -79,6 +81,9 @@ class Openssl(Package):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
+
+        find = which('find')
+        find(self.stage.source_path, '-type', 'f', '-exec', 'sed', '-i', 's/-Wall//g', '{}', ';');
 
         options = ['zlib', 'shared']
         if spec.satisfies('@1.0'):
