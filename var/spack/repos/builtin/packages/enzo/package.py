@@ -53,7 +53,7 @@ class Enzo(Package):
 
     depends_on('python@:2.7.999', type=('build'))
     depends_on('mercurial', type=('build'))
-    depends_on('makedepend', type=('build'))
+    depends_on('makedepend', type=('build'), when="~bluewaters")
     depends_on('hdf5@1.8.16+mpi', type=('build', 'link', 'run'))
     depends_on('mpi', type=('build', 'link', 'run'))
 
