@@ -43,8 +43,10 @@ class Zlib(AutotoolsPackage):
     variant('shared', default=True,
             description='Enables the build of shared libraries.')
 
-    patch('config_include.patch', when="@1.2.11%pgi")
     patch('config_include.patch', when="@1.2.11%intel")
+    patch('config_include.patch', when="@1.2.11%pgi")
+    patch('config_include.patch', when="@1.2.11%cce")
+    patch('w_patch.patch', when="@1.2.11%cce")
 
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
