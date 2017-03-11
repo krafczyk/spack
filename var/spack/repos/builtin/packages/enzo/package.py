@@ -46,7 +46,8 @@ class Enzo(Package):
     version("2.1.1", "0fe775d0a05d5e434b7d1c3e927146d2")
     version("2.1.0", "224a426312af03a573c2087b6d94a2d4")
     
-    variant("mode", default='debug', values=('warn', 'debug', 'high', 'aggressive'),
+    variant("mode", default='debug', values=('warn', 'debug', 'none',
+                                             'normal','high', 'aggressive'),
             exclusive=True, validator=None)
     variant("cray", default=False, description="Use for compilation on cray computers")
     variant("bluewaters", default=False, description="Use for compilation on bluewaters")
@@ -57,12 +58,18 @@ class Enzo(Package):
     depends_on('hdf5@1.8.16+mpi', type=('build', 'link', 'run'))
     depends_on('mpi', type=('build', 'link', 'run'))
 
+    patch('options.patch')
+
     def install(self, spec, prefix):
         build_option = ""
         if self.spec.satisfies('mode=warn'):
             build_option = 'opt-warn'
         elif self.spec.satisfies('mode=debug'):
             build_option = 'opt-debug'
+        elif self.spec.satisfies('mode=none'):
+            build_option = 'opt-none'
+        elif self.spec.satisfies('mode=normal'):
+            build_option = 'opt-normal'
         elif self.spec.satisfies('mode=high'):
             build_option = 'opt-high'
         elif self.spec.satisfies('mode=aggressive'):
@@ -206,6 +213,10 @@ MACH_CFLAGS   = \n""")
 			bcf.write("MACH_F90FLAGS = "
 		                  "-m64\n")
 			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+		elif spec.satisfies("%cce"):
+			bcf.write("MACH_FFLAGS = \n")
+			bcf.write("MACH_F90FLAGS = \n")
+			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
 		else:
 			bcf.write("MACH_FFLAGS = "
 		                  "-fno-second-underscore "
@@ -231,13 +242,16 @@ MACH_CFLAGS   = \n""")
 
 	bcf.write("MACH_OPT_WARN        = -Wall\n")
 	bcf.write("MACH_OPT_DEBUG        = -g\n")
-	if "+bluewaters" in spec:
-		bcf.write("MACH_OPT_HIGH = -O2 "
-		          "-finline-functions -fwhole-program "
-		          "-flto -march=bdver1 -mtune=bdver1 "
-		          "-mprefer-avx128 -ftree-vectorize\n")
-	else:
-		bcf.write("MACH_OPT_HIGH = -O2\n")
+	bcf.write("MACH_OPT_NONE         = -O0\n")
+	bcf.write("MACH_OPT_NORMAL       = -O1\n")
+	bcf.write("MACH_OPT_HIGH         = -O2\n")
+#	if "+bluewaters" in spec:
+#		bcf.write("MACH_OPT_HIGH = -O2 "
+#		          "-finline-functions -fwhole-program "
+#		          "-flto -march=bdver1 -mtune=bdver1 "
+#		          "-mprefer-avx128 -ftree-vectorize\n")
+#	else:
+#		bcf.write("MACH_OPT_HIGH = -O2\n")
 	bcf.write("MACH_OPT_AGGRESSIVE = -O3\n")
 	bcf.write("""
 \n
