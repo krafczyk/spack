@@ -206,33 +206,25 @@ MACH_CFLAGS   = \n""")
 	else:
 		bcf.write("MACH_CXXFLAGS = \n")
 	
-	if '+cray' in spec:
-		if spec.satisfies("%pgi"):
-			bcf.write("MACH_FFLAGS = "
-		                  "-m64\n")
-			bcf.write("MACH_F90FLAGS = "
-		                  "-m64\n")
-			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
-		elif spec.satisfies("%cce"):
-			bcf.write("MACH_FFLAGS = \n")
-			bcf.write("MACH_F90FLAGS = \n")
-			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
-		else:
-			bcf.write("MACH_FFLAGS = "
-		                  "-fno-second-underscore "
-		                  "-ffixed-line-length-132 "
-		                  "-m64\n")
-			bcf.write("MACH_F90FLAGS = "
-		                  "-fno-second-underscore "
-		                  "-m64\n")
-			bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+	if spec.satisfies("%pgi"):
+		bcf.write("MACH_FFLAGS = "
+		          "-m64\n")
+		bcf.write("MACH_F90FLAGS = "
+			  "-m64\n")
+		bcf.write("MACH_LDFLAGS = -Bdynamic\n")
+	elif spec.satisfies("%cce"):
+		bcf.write("MACH_FFLAGS = \n")
+		bcf.write("MACH_F90FLAGS = \n")
+		bcf.write("MACH_LDFLAGS = \n")
 	else:
 		bcf.write("MACH_FFLAGS = "
 		          "-fno-second-underscore "
-		          "-ffixed-line-length-132\n")
+		          "-ffixed-line-length-132 "
+		          "-m64\n")
 		bcf.write("MACH_F90FLAGS = "
-		          "-fno-second-underscore\n")
-		bcf.write("MACH_LDFLAGS = \n")
+		          "-fno-second-underscore "
+		          "-m64\n")
+		bcf.write("MACH_LDFLAGS = -Bdynamic\n")
 	bcf.write("""
 \n
 #-----------------------------------------------------------------------\n
