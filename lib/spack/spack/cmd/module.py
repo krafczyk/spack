@@ -196,7 +196,7 @@ def loads(mtype, specs, args):
         if len(modules_to_load) != 0 or len(modules_to_unload) != 0:
             d['exclude'] = ''
             prompt_lines = ""
-	    if len(modules_to_unload) != 0:
+            if len(modules_to_unload) != 0:
                 prompt_lines += "# We unload any conflicting modules\n"
                 for mod in modules_to_unload:
                     d['name'] = mod
