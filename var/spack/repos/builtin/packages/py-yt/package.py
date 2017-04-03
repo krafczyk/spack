@@ -59,6 +59,7 @@ class PyYt(PythonPackage):
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
     variant("rockstar", default=False, description="enable rockstar support")
+    variant("devmode", default=False, description="enable devmode support")
 
     depends_on("py-astropy", type=('build', 'run'), when="+astropy")
     depends_on("py-cython", type=('build', 'run'))
@@ -80,6 +81,8 @@ class PyYt(PythonPackage):
             rockstar_cfg = open('rockstar.cfg', 'w')
             rockstar_cfg.write(self.spec.get_dependency('rockstar').spec.prefix)
             rockstar_cfg.close()
+        if '+devmode' in self.spec:
+            self.install_word = 'develop'
 
     @run_after('install')
     def check_install(self):
