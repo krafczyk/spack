@@ -54,11 +54,11 @@ packages:
     buildable: False
   python:
     paths:
-      python@2.7.13~tk+ucs4: prebuilt/Python-2.7.13-install
+      python@2.7.13~tk+ucs4: $spack/../prebuilt/Python-2.7.13
     buildable: False
   mercurial:
     paths:
-      mercurial@3.9.1: prebuilt/mercurial-3.9.1-install
+      mercurial@3.9.1: $spack/../prebuilt/mercurial-3.9.1
     buildable: False
   gettext:
     variants: ~libxml2
