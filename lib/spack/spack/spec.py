@@ -1438,11 +1438,7 @@ class Spec(object):
                 spec.external_module = node['external']['module']
                 if spec.external_module is False:
                     spec.external_module = None
-                spec.external = True
-            else:
-                spec.external = False
         else:
-            spec.external = False
             spec.external_path = None
             spec.external_module = None
 
@@ -1668,9 +1664,8 @@ class Spec(object):
                         feq(replacement.architecture, spec.architecture) and
                         feq(replacement._dependencies, spec._dependencies) and
                         feq(replacement.variants, spec.variants) and
-                        feq(replacement.external, spec.external) and
-                        feq(replacement.external_module,
-                            spec.external_module) and
+                        feq(replacement.external_path,
+                            spec.external_path) and
                         feq(replacement.external_module,
                             spec.external_module)):
                     continue
