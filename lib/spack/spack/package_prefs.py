@@ -25,6 +25,7 @@
 
 import spack
 import spack.error
+from spack.util.path import canonicalize_path
 from spack.version import *
 from spack.spec import parse_anonymous_spec
 
@@ -238,7 +239,7 @@ def spec_externals(spec):
             # skip entries without paths (avoid creating extra Specs)
             continue
 
-        external_spec = spack.spec.Spec(external_spec, external=True,  external_path=path)
+        external_spec = spack.spec.Spec(external_spec, external=True,  external_path=canonicalize_path(path))
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 
