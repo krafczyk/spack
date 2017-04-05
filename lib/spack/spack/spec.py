@@ -958,7 +958,6 @@ class Spec(object):
         self._concrete = kwargs.get('concrete', False)
 
         # Allow a spec to be constructed with an external path.
-        self.external = kwargs.get('external', False)
         self.external_path = kwargs.get('external_path', None)
         self.external_module = kwargs.get('external_module', None)
 
@@ -980,6 +979,10 @@ class Spec(object):
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec, deptypes)
             deptypes = ()
+
+    @property
+    def external(self):
+        return bool(self.external_path) or bool(self.external_module)
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -2348,7 +2351,6 @@ class Spec(object):
                        self.variants != other.variants and
                        self._normal != other._normal and
                        self.concrete != other.concrete and
-                       self.external != other.external and
                        self.external_path != other.external_path and
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
@@ -2365,7 +2367,6 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
         self.variants.spec = self
-        self.external = other.external
         self.external_path = other.external_path
         self.external_module = other.external_module
         self.namespace = other.namespace
