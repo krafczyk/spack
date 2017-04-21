@@ -51,6 +51,7 @@ class Enzo(Package):
             exclusive=True, validator=None)
     variant("cray", default=False, description="Use for compilation on cray computers")
     variant("bluewaters", default=False, description="Use for compilation on bluewaters")
+    variant("bitwise", default=False, description="Use to activate strategies to improve determinism")
 
     depends_on('python@:2.7.999', type=('build'))
     depends_on('mercurial', type=('build'))
@@ -293,6 +294,10 @@ MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)\n""")
         make("machine-spack")
         # Set debug mode
         make(build_option)
+        if '+bitwise' in spec:
+            make('bitwise-yes')
+        else:
+            make('bitwise-no')
         make("clean")
         # Build
         make()
@@ -302,12 +307,20 @@ MACH_LIBS_MPI     = $(LOCAL_LIBS_MPI)\n""")
         make("machine-spack")
         make("clean")
         make(build_option)
+        if '+bitwise' in spec:
+            make('bitwise-yes')
+        else:
+            make('bitwise-no')
         make()
 
         # And the ring tool
         cd("../ring")
         make("machine-spack")
         make(build_option)
+        if '+bitwise' in spec:
+            make('bitwise-yes')
+        else:
+            make('bitwise-no')
         make("clean")
         make()
         copy('ring.exe', '../../bin/ring')
