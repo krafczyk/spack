@@ -32,9 +32,10 @@ class Libconfig(AutotoolsPackage):
     url      = "https://github.com/hyperrealm/libconfig/archive/v1.6.tar.gz"
 
     force_autoreconf = True
-
-    version('1.6', '2ccd24b6a2ee39f7ff8a3badfafb6539')
-    version('1.5', 'e92a91c2ddf3bf77bea0f5ed7f09e492')
+    # currently an error with this version, see:
+    # https://github.com/hyperrealm/libconfig/issues/47
+    #version('1.6', '2ccd24b6a2ee39f7ff8a3badfafb6539')
+    version('1.5', 'e92a91c2ddf3bf77bea0f5ed7f09e492', preferred=True)
 
     depends_on('m4', type=('build'))
     depends_on('autoconf', type=('build'))
