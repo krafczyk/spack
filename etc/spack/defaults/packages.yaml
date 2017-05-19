@@ -15,57 +15,23 @@
 # -------------------------------------------------------------------------
 packages:
   hdf5:
-    variants: [ +craybuilt, +mpi ]
-    modules:
-      hdf5~debug+shared+cxx+fortran+mpi~szip~threadsafe+pic+craybuilt@1.8.13: cray-hdf5-parallel/1.8.13
-      hdf5~debug+shared+cxx+fortran+mpi~szip~threadsafe+pic+craybuilt@1.8.16: cray-hdf5-parallel/1.8.16
-      hdf5~debug+shared+cxx+fortran~mpi~szip~threadsafe+pic+craybuilt@1.8.16: cray-hdf5/1.8.16
+    variants: [ ~craybuilt, +mpi ]
     buildable-blacklist:
       [ hdf5+craybuilt ]
-  cray-mpich:
+  openmpi:
     modules:
-      cray-mpich@6.1.0: cray-mpich/6.1.0
-      cray-mpich@6.1.1: cray-mpich/6.1.1
-      cray-mpich@6.2.0: cray-mpich/6.2.0
-      cray-mpich@6.2.1: cray-mpich/6.2.1
-      cray-mpich@6.2.2: cray-mpich/6.2.2
-      cray-mpich@6.3.0: cray-mpich/6.3.0
-      cray-mpich@6.3.1: cray-mpich/6.3.1
-      cray-mpich@7.0.0: cray-mpich/7.0.0
-      cray-mpich@7.0.1: cray-mpich/7.0.1
-      cray-mpich@7.0.2: cray-mpich/7.0.2
-      cray-mpich@7.0.3: cray-mpich/7.0.3
-      cray-mpich@7.0.4: cray-mpich/7.0.4
-      cray-mpich@7.0.5: cray-mpich/7.0.5
-      cray-mpich@7.1.0: cray-mpich/7.1.0
-      cray-mpich@7.1.1: cray-mpich/7.1.1
-      cray-mpich@7.1.3: cray-mpich/7.1.3
-      cray-mpich@7.2.0: cray-mpich/7.2.0
-      cray-mpich@7.2.1: cray-mpich/7.2.1
-      cray-mpich@7.2.4: cray-mpich/7.2.4
-      cray-mpich@7.2.5: cray-mpich/7.2.5
-      cray-mpich@7.3.0: cray-mpich/7.3.0
-      cray-mpich@7.3.1: cray-mpich/7.3.1
-      cray-mpich@7.3.2: cray-mpich/7.3.2
-      cray-mpich@7.3.3: cray-mpich/7.3.3
-      cray-mpich@7.5.0: cray-mpich/7.5.0
+      openmpi@1.10.2%gcc@4.8.1: openmpi/1.10.2/gcc
+      openmpi@1.10.2%intel@2016.u1: openmpi/1.10.2/intel
+  cray-mpich:
     buildable: False
   cray-mpi:
-    buildable: False
-  python:
-    paths:
-      python@2.7.13~tk+ucs4: $spack/../prebuilt/Python-2.7.13
-    buildable: False
-  mercurial:
-    paths:
-      mercurial@3.9.1: $spack/../prebuilt/mercurial-3.9.1
     buildable: False
   gettext:
     variants: ~libxml2
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag]
+    compiler: [gcc, intel]
     providers:
-      mpi: [openmpi, mpich]
+      mpi: [openmpi]
       blas: [openblas]
       lapack: [openblas]
       pil: [py-pillow]
