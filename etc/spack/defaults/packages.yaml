@@ -18,10 +18,10 @@ packages:
     variants: [ ~craybuilt, +mpi ]
     buildable-blacklist:
       [ hdf5+craybuilt ]
-  openmpi:
-    modules:
-      openmpi@1.10.2%gcc@4.8.1: openmpi/1.10.2/gcc
-      openmpi@1.10.2%intel@2016.u1: openmpi/1.10.2/intel
+  #openmpi:
+  #  modules:
+  #    openmpi@1.10.2%gcc@4.8.1: openmpi/1.10.2/gcc
+  #    openmpi@1.10.2%intel@2016.u1: openmpi/1.10.2/intel
   cray-mpich:
     buildable: False
   cray-mpi:

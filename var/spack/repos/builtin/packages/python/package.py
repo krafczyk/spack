@@ -357,7 +357,10 @@ class Python(Package):
             else:
                 raise RuntimeError('Cannot locate python executable')
         python = Executable(os.path.join(base, pythonex))
-        python.add_default_env('LD_LIBRARY_PATH', ':'.join([self.prefix.lib, os.environ['LD_LIBRARY_PATH']]))
+        try:
+            python.add_default_env('LD_LIBRARY_PATH', ':'.join([self.prefix.lib, os.environ['LD_LIBRARY_PATH']]))
+        except KeyError:
+            python.add_default_env('LD_LIBRARY_PATH', self.prefix.lib)
         prefix = python('-c', 'import sys; print(sys.prefix)', output=str)
         spack_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
         spack_env.set('PYTHONHOME', prefix.strip('\n'))
