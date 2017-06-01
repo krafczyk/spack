@@ -172,6 +172,7 @@ def display_specs(specs, **kwargs):
     hashes = kwargs.get('long', False)
     namespace = kwargs.get('namespace', False)
     flags = kwargs.get('show_flags', False)
+    full_compiler = kwargs.get('show_full_compiler', False)
     variants = kwargs.get('variants', False)
 
     hlen = 7
@@ -180,7 +181,13 @@ def display_specs(specs, **kwargs):
         hlen = None
 
     nfmt = '.' if namespace else '_'
-    ffmt = '$%+' if flags else ''
+    ffmt = ''
+    if full_compiler or flags:
+        ffmt += '$%'
+        if full_compiler:
+            ffmt += '@'
+        if flags:
+            ffmt += '+'
     vfmt = '$+' if variants else ''
     format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
 
@@ -221,7 +228,7 @@ def display_specs(specs, **kwargs):
 
         elif mode == 'short':
             # Print columns of output if not printing flags
-            if not flags:
+            if not flags and not full_compiler:
 
                 def fmt(s):
                     string = ""
