@@ -76,6 +76,7 @@ attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
 import os
+import re
 import inspect
 import platform as py_platform
 
@@ -88,6 +89,7 @@ from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
+from spack.util.executable import *
 import spack.error as serr
 
 
@@ -281,9 +283,13 @@ class OperatingSystem(object):
         # NOTE: we import spack.compilers here to avoid init order cycles
         import spack.compilers
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(lambda cmp_cls:
-                                self.find_compiler(cmp_cls, *filtered_path),
-                                types)
+
+        # We cannot use parmap here because some version searches depend
+        # on the environment for things such as locations of license files
+        compiler_lists = []
+        for single_type in types:
+            compiler_lists.append(self.find_compiler(single_type,
+                                                     *filtered_path))
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
@@ -301,6 +307,8 @@ class OperatingSystem(object):
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
         """
+        # We can use parmap here because path search doesn't depend
+        # on env.
         dicts = parmap(
             lambda t: cmp_cls._find_matches_in_path(*t),
             [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
@@ -336,6 +344,90 @@ class OperatingSystem(object):
                     continue
 
             compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
+
+        # See if modulecmd is available if it is, override path compilers
+        # with their module equivalents.
+        modulecmd = which('modulecmd')
+        if modulecmd is not None:
+            modulecmd.add_default_arg('python')
+            for module_name in cmp_cls.module_names:
+                output = modulecmd(
+                    'avail', module_name, output=str, error=str)
+                version_regex = r'(%s)/([\d\.]+[\d])' % module_name
+                matches = re.findall(version_regex, output)
+
+                for name, version in matches:
+                    mod_name = "%s/%s" % (name, version)
+                    tty.debug("Found %s" % (mod_name))
+
+                    # check for conflicts and load required module
+                    # This allows the compiler to find license files
+                    # if need be.
+                    text = modulecmd('show', mod_name,
+                                     output=str, error=str).split()
+                    for i, word in enumerate(text):
+                        if word == 'conflict':
+                            modulecmd('unload', text[i + 1],
+                                      output=str, error=str)
+                            tty.debug("Removed module %s" % mod_name)
+                    modulecmd('load', mod_name, output=str, error=str)
+                    tty.debug("Loaded module %s" % mod_name)
+
+                    v = version
+                    # Fetch paths to search for compilers from the module
+                    paths = []
+                    text = modulecmd(
+                        'show', (name + '/' + v),
+                        output=str, error=str).split()
+                    for i, word in enumerate(text):
+                        if len(re.findall('path', word)) != 0:
+                            paths.append(text[i + 2])
+
+                    # get compilers from paths
+                    # we can use parmap here because the appropriate module
+                    # has already been loaded.
+                    dicts = parmap(
+                        lambda t: cmp_cls._find_matches_in_path(*t),
+                        [((cmp_cls.cc_names,  cmp_cls.cc_version) +
+                            tuple(paths)),
+                         ((cmp_cls.cxx_names, cmp_cls.cxx_version) +
+                             tuple(paths)),
+                         ((cmp_cls.f77_names, cmp_cls.f77_version) +
+                             tuple(paths)),
+                         ((cmp_cls.fc_names,  cmp_cls.fc_version) +
+                             tuple(paths))])
+                    all_keys = set()
+                    for d in dicts:
+                        all_keys.update(d)
+                    for k in all_keys:
+                        ver, pre, suf = k
+
+                        # Skip compilers with unknown version.
+                        if ver == 'unknown':
+                            continue
+
+                        paths = tuple(
+                            pn[k] if k in pn else None for pn in dicts)
+                        spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
+
+                        if ver in compilers:
+                            prev = compilers[ver]
+
+                            # prefer the one with more compilers.
+                            prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
+                            newcount = len([p for p in paths if p is not None])
+                            prevcount = len(
+                                [p for p in prev_paths if p is not None])
+
+                            # Don't add if it's not an improvement over
+                            # prev compiler. but only if the previous
+                            # compiler was module based
+                            if len(prev.modules) > 0 and newcount <= prevcount:
+                                continue
+
+                        compilers[ver] = cmp_cls(
+                            spec, self, py_platform.machine(),
+                            paths, [name + '/' + v])
 
         return list(compilers.values())
 
