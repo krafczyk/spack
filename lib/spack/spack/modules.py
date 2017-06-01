@@ -380,6 +380,11 @@ class EnvModule(with_metaclass(ModuleMeta, object)):
         # Environment modifications guessed by inspecting the
         # installation prefix
         env = inspect_path(self.spec.prefix)
+        if self.spec.external:
+            if self.spec.external_module:
+                env.load(self.spec.external_module, first=True)
+        for m in reversed(self.spec.package.compiler.modules):
+            env.load(m, first=True)
 
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
@@ -464,10 +469,11 @@ class EnvModule(with_metaclass(ModuleMeta, object)):
     def process_environment_command(self, env):
         for command in env:
             # Token expansion from configuration file
-            name = format_env_var_name(
-                self.spec.format(command.args.get('name', '')))
-            value = self.spec.format(str(command.args.get('value', '')))
-            command.update_args(name=name, value=value)
+            if type(command) != type(LoadModule) and type(command) != type(UnloadModule):
+                name = format_env_var_name(
+                    self.spec.format(command.args.get('name', '')))
+                value = self.spec.format(str(command.args.get('value', '')))
+                command.update_args(name=name, value=value)
             # Format the line int the module file
             try:
                 yield self.environment_modifications_formats[type(
@@ -598,6 +604,8 @@ class TclModule(EnvModule):
 
     def process_environment_command(self, env):
         environment_modifications_formats_colon = {
+            LoadModule: 'module load {name}\n',
+            UnloadModule: 'module unload {name}\n',
             PrependPath: 'prepend-path {name} \"{value}\"\n',
             AppendPath: 'append-path   {name} \"{value}\"\n',
             RemovePath: 'remove-path   {name} \"{value}\"\n',
@@ -605,6 +613,8 @@ class TclModule(EnvModule):
             UnsetEnv: 'unsetenv {name}\n'
         }
         environment_modifications_formats_general = {
+            LoadModule: 'module load {name}\n',
+            UnloadModule: 'module unload {name}\n',
             PrependPath:
             'prepend-path --delim "{separator}" {name} \"{value}\"\n',
             AppendPath:
@@ -616,10 +626,11 @@ class TclModule(EnvModule):
         }
         for command in env:
             # Token expansion from configuration file
-            name = format_env_var_name(
-                self.spec.format(command.args.get('name', '')))
-            value = self.spec.format(str(command.args.get('value', '')))
-            command.update_args(name=name, value=value)
+            if type(command) != spack.environment.LoadModule and type(command) != spack.environment.UnloadModule:
+                name = format_env_var_name(
+                    self.spec.format(command.args.get('name', '')))
+                value = self.spec.format(str(command.args.get('value', '')))
+                command.update_args(name=name, value=value)
             # Format the line int the module file
             try:
                 if command.args.get('separator', ':') == ':':
@@ -678,6 +689,8 @@ class LmodModule(EnvModule):
         _roots.get(name, join_path(spack.share_path, name)))
 
     environment_modifications_formats = {
+        LoadModule: 'load("{name}")\n',
+        UnloadModule: 'load("{name}")\n',
         PrependPath: 'prepend_path("{name}", "{value}")\n',
         AppendPath: 'append_path("{name}", "{value}")\n',
         RemovePath: 'remove_path("{name}", "{value}")\n',

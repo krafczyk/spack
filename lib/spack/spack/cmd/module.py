@@ -34,6 +34,7 @@ import spack.cmd
 from llnl.util import filesystem, tty
 from spack.cmd.common import arguments
 from spack.modules import module_types
+from spack.util.executable import which
 
 description = "manipulate module files"
 section = "environment"
@@ -97,6 +98,10 @@ def setup_parser(subparser):
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
     )
+    loads_parser.add_argument(
+        '-nm', '--no-module-guessing', dest='no_module_guessing', action='store_true',
+        help="Don't try to guess which modules to unload."
+    )
     arguments.add_common_arguments(
         loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
     )
@@ -113,6 +118,11 @@ class NoMatch(Exception):
 @subcommand('loads')
 def loads(mtype, specs, args):
     """Prompt the list of modules associated with a list of specs"""
+
+    # We need modulecmd since we need to inspect some module files.
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
@@ -133,25 +143,87 @@ def loads(mtype, specs, args):
     modules = [(spec, module_cls(spec).use_name)
                for spec in specs if os.path.exists(module_cls(spec).file_name)]
 
-    module_commands = {
+    module_load_commands = {
         'tcl': 'module load ',
         'lmod': 'module load ',
         'dotkit': 'dotkit use '
     }
 
-    d = {
-        'command': '' if not args.shell else module_commands[mtype],
-        'prefix': args.prefix
+    module_unload_commands = {
+        'tcl': 'module unload ',
+        'lmod': 'module unload ',
+        'dotkit': 'dotkit unuse '
     }
 
+    d = {
+        'load_command': '' if not args.shell else module_load_commands[mtype],
+        'unload_command': '' if not args.shell else module_unload_commands[mtype],
+        'prefix': args.prefix
+    }
     exclude_set = set(args.exclude)
-    prompt_template = '{comment}{exclude}{command}{prefix}{name}'
+
+    # We build the lines to print
+    comment_template = '{comment}'
+    module_load_template = '{exclude}{load_command}{prefix}{name}\n'
+    module_unload_template = '{exclude}{unload_command}{prefix}{name}\n'
+
+    if not args.no_module_guessing:
+        # first check for dependent modules you need to load
+        # or conflicting modules you need to unload
+
+        modules_to_load = []
+        modules_to_unload = []
+
+        for spec, mod in modules:
+            if spec.name in exclude_set:
+                continue
+            # FIXME: This procedure is not a complete
+            # module loading solution. It only goes one level deep.
+            # Inspect module for load commands
+            primary_mod_text = modulecmd('show', mod, output=str, error=str).split()
+            for i, word in enumerate(primary_mod_text):
+                if word == 'conflict':
+                    if primary_mod_text[i+1] not in modules_to_unload:
+                        modules_to_unload.append(primary_mod_text[i+1])
+                if word == 'load':
+                    if primary_mod_text[i+1] not in modules_to_load:
+                        modules_to_load.append(primary_mod_text[i+1])
+            # Inspect loaded modules for conflict statements.
+            for mod_lo in modules_to_load:
+                mod_text = modulecmd('show', mod_lo, output=str, error=str).split()
+                for i, word in enumerate(mod_text):
+                    if word == 'conflict':
+                        if mod_text[i+1] not in modules_to_unload:
+                            modules_to_unload.append(mod_text[i+1])
+
+        if len(modules_to_load) != 0 or len(modules_to_unload) != 0:
+            d['exclude'] = ''
+            prompt_lines = ""
+            if len(modules_to_unload) != 0:
+                prompt_lines += "# We unload any conflicting modules\n"
+                for mod in modules_to_unload:
+                    d['name'] = mod
+                    prompt_lines += module_unload_template.format(**d)
+            print(prompt_lines)
+            prompt_lines = ""
+            if len(modules_to_load) != 0:
+                prompt_lines += "# We load any needed modules\n"
+                for mod in modules_to_load:
+                    d['name'] = mod
+                    prompt_lines += module_load_template.format(**d)
+            print(prompt_lines)
+
     for spec, mod in modules:
         d['exclude'] = '## ' if spec.name in exclude_set else ''
         d['comment'] = '' if not args.shell else '# {0}\n'.format(
             spec.format())
+        # FIXME: This procedure is not a complete
+        # module loading solution. It only goes one level deep.
+        prompt_lines = comment_template.format(**d)
         d['name'] = mod
-        print(prompt_template.format(**d))
+        prompt_lines += module_load_template.format(**d)
+        print(prompt_lines)
+
 
 
 @subcommand('find')
