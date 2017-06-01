@@ -138,9 +138,11 @@ def load_module(mod):
         if word == 'conflict':
             exec(compile(modulecmd('unload', text[i + 1], output=str,
                                    error=str), '<string>', 'exec'))
+            tty.debug("Removed module %s" % mod)
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
+    tty.debug("Loaded module %s" % mod)
 
 
 def get_path_from_module(mod):
