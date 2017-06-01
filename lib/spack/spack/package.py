@@ -67,7 +67,6 @@ from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.stage import DIYStage
-from spack.util.crypto import bit_length
 from spack.util.environment import dump_environment
 from spack.version import *
 
@@ -1197,18 +1196,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return self._process_external_package(explicit)
 
         if self.name not in setup:
-	        # Ensure package is not already installed
-	        layout = spack.store.layout
-	        with spack.store.db.prefix_read_lock(self.spec):
-	            if (keep_prefix and os.path.isdir(self.prefix) and
-	                    (not self.installed)):
-	                tty.msg(
-	                    "Continuing from partial install of %s" % self.name)
-	            elif layout.check_installed(self.spec):
-	                msg = '{0.name} is already installed in {0.prefix}'
-	                tty.msg(msg.format(self))
-	                rec = spack.store.db.get_record(self.spec)
-	                return self._update_explicit_entry_in_db(rec, explicit)
+            # Ensure package is not already installed
+            layout = spack.store.layout
+            with spack.store.db.prefix_read_lock(self.spec):
+                if (keep_prefix and os.path.isdir(self.prefix) and
+                        (not self.installed)):
+                    tty.msg(
+                        "Continuing from partial install of %s" % self.name)
+                elif layout.check_installed(self.spec):
+                    msg = '{0.name} is already installed in {0.prefix}'
+                    tty.msg(msg.format(self))
+                    rec = spack.store.db.get_record(self.spec)
+                    return self._update_explicit_entry_in_db(rec, explicit)
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
@@ -1346,7 +1345,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                         "Fetch: %s.  Build: %s.  Total: %s." %
                         (_hms(self._fetch_time), _hms(build_time),
                          _hms(self._total_time)))
-    
+
             print_pkg(self.prefix)
         # --------------------- end of def build_process
 

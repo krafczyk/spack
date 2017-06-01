@@ -469,7 +469,8 @@ class EnvModule(with_metaclass(ModuleMeta, object)):
     def process_environment_command(self, env):
         for command in env:
             # Token expansion from configuration file
-            if type(command) != type(LoadModule) and type(command) != type(UnloadModule):
+            if (type(command) != type(LoadModule)) and\
+               (type(command) != type(UnloadModule)):
                 name = format_env_var_name(
                     self.spec.format(command.args.get('name', '')))
                 value = self.spec.format(str(command.args.get('value', '')))
@@ -626,7 +627,8 @@ class TclModule(EnvModule):
         }
         for command in env:
             # Token expansion from configuration file
-            if type(command) != spack.environment.LoadModule and type(command) != spack.environment.UnloadModule:
+            if (type(command) != spack.environment.LoadModule) and\
+               (type(command) != spack.environment.UnloadModule):
                 name = format_env_var_name(
                     self.spec.format(command.args.get('name', '')))
                 value = self.spec.format(str(command.args.get('value', '')))

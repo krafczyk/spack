@@ -29,9 +29,6 @@ import spack.package
 import spack.cmd
 import spack.cmd.install as install
 import spack.cmd.common.arguments as arguments
-from llnl.util.filesystem import set_executable
-from spack import which
-from spack.stage import DIYStage
 
 description = "create a configuration script and module, but don't build"
 section = "developer"
@@ -60,14 +57,14 @@ def spack_transitive_include_path():
     )
 
 
-def write_spconfig(package):
-    # Set-up the environment
-    spack.build_environment.setup_package(package)
-
-    cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
-
-    env = dict()
-
+# def write_spconfig(package):
+#     # Set-up the environment
+#     spack.build_environment.setup_package(package)
+#
+#     cmd = [str(which('cmake'))] + package.std_cmake_args +
+# package.cmake_args()
+#
+#     env = dict()
 
 def get_spconfig_fname(package):
     return 'spconfig.py'

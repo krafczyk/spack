@@ -26,7 +26,7 @@ from spack import *
 
 
 class CrayMpich(AutotoolsPackage):
-    """Cray MPICH is a cray implemented version of the 
+    """Cray MPICH is a cray implemented version of the
        high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
 

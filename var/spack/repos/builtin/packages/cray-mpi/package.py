@@ -26,7 +26,7 @@ from spack import *
 
 
 class CrayMpi(AutotoolsPackage):
-    """Cray MPI is a cray implemented version of the 
+    """Cray MPI is a cray implemented version of the
        high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
 
