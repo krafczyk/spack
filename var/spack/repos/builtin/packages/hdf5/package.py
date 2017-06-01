@@ -66,6 +66,8 @@ class Hdf5(AutotoolsPackage):
             description='Enable thread-safe capabilities')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    variant('craybuilt', default=False,
+            description='Whether hdf5 was produced by cray or not.')
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')
