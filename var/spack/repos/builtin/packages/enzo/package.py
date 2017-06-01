@@ -48,7 +48,7 @@ class Enzo(Package):
 
     variant("mode", default='debug', values=('warn', 'debug', 'none',
                                              'normal', 'high', 'aggressive'),
-            exclusive=True, validator=None)
+            validator=None)
     variant("cray", default=False, description="Use for compilation on cray computers")
     variant("bluewaters", default=False, description="Use for compilation on bluewaters")
     variant("bitwise", default=False, description="Use to activate strategies to improve determinism")
