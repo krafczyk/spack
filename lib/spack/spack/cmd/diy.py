@@ -52,6 +52,9 @@ def setup_parser(subparser):
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
     subparser.add_argument(
+        '-d', '--source-dir',
+        help="Indicate the directory to find the package's source code")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install. must contain package AND version")
 
@@ -85,8 +88,11 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
-    # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+    if args.source_dir is not None:
+        package.stage = DIYStage(args.source_dir)
+    else:
+        # Forces the build to run out of the current directory.
+        package.stage = DIYStage(os.getcwd())
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
