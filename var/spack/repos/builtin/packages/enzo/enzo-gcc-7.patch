@@ -1,0 +1,48 @@
+From d7d44907461fddab2f7a2008e9aace9ba73580ca Mon Sep 17 00:00:00 2001
+From: Matthew Krafczyk <krafczyk.matthew@gmail.com>
+Date: Thu, 1 Jun 2017 15:59:29 -0500
+Subject: [PATCH] Fix gcc 7 bug
+
+---
+ src/enzo/FSProb_RadiationSource.F90 | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/enzo/FSProb_RadiationSource.F90 b/src/enzo/FSProb_RadiationSource.F90
+index a162cc2..719d107 100644
+--- a/src/enzo/FSProb_RadiationSource.F90
++++ b/src/enzo/FSProb_RadiationSource.F90
+@@ -66,8 +66,9 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+   
+ !--------------
+ ! locals
+-  INTEGER   :: seed(12)
+-  INTG_PREC :: i, j, k, l, nsrc
++  INTEGER   :: seed_num
++  INTEGER, dimension(:), allocatable :: seed
++  INTG_PREC :: i, j, k, l, s_i, nsrc
+   R_PREC    :: h_nu0, etaconst, rnums(10)
+   R_PREC    :: dx, dy, dz, cellXl, cellXr, cellYl, cellYr, cellZl, cellZr
+   R_PREC    :: cellXc, cellYc, cellZc
+@@ -94,6 +95,11 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+      ! get the number of sources from EtaRadius
+      nsrc = EtaRadius   ! cast to an INTG_PREC
+ 
++     call random_seed(size=seed_num)
++     allocate(seed(seed_num))
++     do s_i=1,seed_num
++        seed(s_i) = 0
++     enddo
+      ! set the seed by casting the time to an INTG_PREC
+      seed(1) = 5._RKIND*time/tUn + x0L/dx + x1L/dy + x2L/dz
+      seed(1) = seed(1) + 13
+@@ -113,6 +119,7 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+ !        print '(A,3(i2,1x),A,es9.2)', '   setting source at ',i,j,k,' with strength ',eta(i,j,k)
+ 
+      enddo
++     deallocate(seed)
+ 
+   !   point-source emissivity at location EtaCenter(1:3)
+   else if ((ProbType > 450) .and. (ProbType <= 460)) then
+-- 
+2.13.0
+
