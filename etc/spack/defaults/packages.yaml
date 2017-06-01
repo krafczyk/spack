@@ -14,20 +14,24 @@
 #   ~/.spack/packages.yaml
 # -------------------------------------------------------------------------
 packages:
+  hdf5:
+    variants: [ ~craybuilt, +mpi ]
+    buildable-blacklist:
+      [ hdf5+craybuilt ]
+  #openmpi:
+  #  modules:
+  #    openmpi@1.10.2%gcc@4.8.1: openmpi/1.10.2/gcc
+  #    openmpi@1.10.2%intel@2016.u1: openmpi/1.10.2/intel
+  cray-mpich:
+    buildable: False
+  cray-mpi:
+    buildable: False
+  gettext:
+    variants: ~libxml2
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag]
+    compiler: [gcc, intel]
     providers:
-      awk: [gawk]
+      mpi: [openmpi]
       blas: [openblas]
-      daal: [intel-parallel-studio+daal]
-      elf: [elfutils]
-      golang: [gcc]
-      ipp: [intel-parallel-studio+ipp]
       lapack: [openblas]
-      mkl: [intel-parallel-studio+mkl]
-      mpe: [mpe2]
-      mpi: [openmpi, mpich]
-      opencl: [pocl]
-      openfoam: [foam-extend]
       pil: [py-pillow]
-      scalapack: [netlib-scalapack]
