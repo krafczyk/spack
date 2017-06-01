@@ -60,6 +60,7 @@ class Enzo(Package):
     depends_on('mpi', type=('build', 'link', 'run'))
 
     patch('options.patch')
+    patch('enzo-gcc-7.patch', when="%gcc@7:")
 
     def install(self, spec, prefix):
         build_option = ""
