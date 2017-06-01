@@ -48,6 +48,7 @@ import string
 import textwrap
 from six import iteritems
 from six import with_metaclass
+import glob
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
@@ -103,9 +104,10 @@ def inspect_path(prefix):
     prefix_inspections = _module_config.get('prefix_inspections', {})
     for relative_path, variables in prefix_inspections.items():
         expected = join_path(prefix, relative_path)
-        if os.path.isdir(expected):
-            for variable in variables:
-                env.prepend_path(variable, expected)
+        for expected_path in glob.glob(expected):
+            if os.path.isdir(expected_path):
+                for variable in variables:
+                    env.prepend_path(variable, expected_path)
     return env
 
 
