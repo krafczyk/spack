@@ -99,8 +99,8 @@ def setup_parser(subparser):
         help="exclude package from output; may be specified multiple times"
     )
     loads_parser.add_argument(
-        '-nm', '--no-module-guessing', dest='no_module_guessing', action='store_true',
-        help="Don't try to guess which modules to unload."
+        '-nm', '--no-module-guessing', dest='no_module_guessing',
+        action='store_true', help="Don't try to guess which modules to unload."
     )
     arguments.add_common_arguments(
         loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
@@ -156,8 +156,10 @@ def loads(mtype, specs, args):
     }
 
     d = {
-        'load_command': '' if not args.shell else module_load_commands[mtype],
-        'unload_command': '' if not args.shell else module_unload_commands[mtype],
+        'load_command': '' if not args.shell
+        else module_load_commands[mtype],
+        'unload_command': '' if not args.shell
+        else module_unload_commands[mtype],
         'prefix': args.prefix
     }
     exclude_set = set(args.exclude)
@@ -180,21 +182,23 @@ def loads(mtype, specs, args):
             # FIXME: This procedure is not a complete
             # module loading solution. It only goes one level deep.
             # Inspect module for load commands
-            primary_mod_text = modulecmd('show', mod, output=str, error=str).split()
+            primary_mod_text = modulecmd('show', mod,
+                                         output=str, error=str).split()
             for i, word in enumerate(primary_mod_text):
                 if word == 'conflict':
-                    if primary_mod_text[i+1] not in modules_to_unload:
-                        modules_to_unload.append(primary_mod_text[i+1])
+                    if primary_mod_text[i + 1] not in modules_to_unload:
+                        modules_to_unload.append(primary_mod_text[i + 1])
                 if word == 'load':
-                    if primary_mod_text[i+1] not in modules_to_load:
-                        modules_to_load.append(primary_mod_text[i+1])
+                    if primary_mod_text[i + 1] not in modules_to_load:
+                        modules_to_load.append(primary_mod_text[i + 1])
             # Inspect loaded modules for conflict statements.
             for mod_lo in modules_to_load:
-                mod_text = modulecmd('show', mod_lo, output=str, error=str).split()
+                mod_text = modulecmd('show', mod_lo,
+                                     output=str, error=str).split()
                 for i, word in enumerate(mod_text):
                     if word == 'conflict':
-                        if mod_text[i+1] not in modules_to_unload:
-                            modules_to_unload.append(mod_text[i+1])
+                        if mod_text[i + 1] not in modules_to_unload:
+                            modules_to_unload.append(mod_text[i + 1])
 
         if len(modules_to_load) != 0 or len(modules_to_unload) != 0:
             d['exclude'] = ''
@@ -223,7 +227,6 @@ def loads(mtype, specs, args):
         d['name'] = mod
         prompt_lines += module_load_template.format(**d)
         print(prompt_lines)
-
 
 
 @subcommand('find')

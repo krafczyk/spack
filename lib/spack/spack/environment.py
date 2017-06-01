@@ -192,9 +192,9 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = LoadModule(name, **kwargs)
-	if kwargs.get('first', False):
-            self.env_modifications.insert(0,item)
-	else:
+        if kwargs.get('first', False):
+            self.env_modifications.insert(0, item)
+        else:
             self.env_modifications.append(item)
 
     def unload(self, name, **kwargs):
@@ -206,9 +206,9 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnloadModule(name, **kwargs)
-	if kwargs.get('first', False):
-            self.env_modifications.insert(0,item)
-	else:
+        if kwargs.get('first', False):
+            self.env_modifications.insert(0, item)
+        else:
             self.env_modifications.append(item)
 
     def unset(self, name, **kwargs):
