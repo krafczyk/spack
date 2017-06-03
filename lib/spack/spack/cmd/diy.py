@@ -88,7 +88,7 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
-    source_path = args.source_path
+    source_path = args.source_dir
     if source_path is None:
         source_path = os.getcwd()
     source_path = os.path.abspath(source_path)
