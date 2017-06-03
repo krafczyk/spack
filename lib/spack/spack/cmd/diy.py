@@ -88,11 +88,12 @@ def diy(self, args):
         tty.msg("Uninstall or try adding a version suffix for this DIY build.")
         sys.exit(1)
 
-    if args.source_dir is not None:
-        package.stage = DIYStage(args.source_dir)
-    else:
-        # Forces the build to run out of the current directory.
-        package.stage = DIYStage(os.getcwd())
+    source_path = args.source_path
+    if source_path is None:
+        source_path = os.getcwd()
+    source_path = os.path.abspath(source_path)
+
+    package.stage = DIYStage(source_path)
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
