@@ -40,6 +40,9 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-j', '--jobs', action='store', type=int,
+        help="explicitly set number of make jobs. default is #cpus")
+    subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
     subparser.add_argument(
@@ -62,9 +65,13 @@ def setup_parser(subparser):
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
-def diy(self, args):
+def diy(self, args, **kwargs):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
+
+    if args.jobs is not None:
+        if args.jobs <= 0:
+            tty.die("The -j option must be a positive integer!")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
@@ -97,6 +104,19 @@ def diy(self, args):
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
+
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'install_deps': not args.ignore_deps,
+        'verbose': args.verbose,
+        'keep_stage': True,
+        'dirty': args.dirty
+    })
+    
+    if args.jobs is not None:
+        kwargs.update({
+            'make_jobs': args.jobs,
+        })
 
     package.do_install(
         keep_prefix=args.keep_prefix,
