@@ -118,9 +118,4 @@ def diy(self, args, **kwargs):
             'make_jobs': args.jobs,
         })
 
-    package.do_install(
-        keep_prefix=args.keep_prefix,
-        install_deps=not args.ignore_deps,
-        verbose=not args.quiet,
-        keep_stage=True,   # don't remove source dir for DIY.
-        dirty=args.dirty)
+    package.do_install(**kwargs)
