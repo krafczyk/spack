@@ -108,7 +108,7 @@ def diy(self, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'install_deps': not args.ignore_deps,
-        'verbose': args.verbose,
+        'verbose': not args.quiet,
         'keep_stage': True,
         'dirty': args.dirty
     })
