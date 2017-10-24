@@ -65,7 +65,7 @@ This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+If :ref:`environment-modules, lmod, or dotkit <ModuleSystems>` is
 installed and available, the ``spack`` command can also load and unload
 :ref:`modules <modules>`.
 
@@ -891,7 +891,7 @@ environment module that may be loaded.  Either way works.
 
 If you find that you are missing some of these programs, ``spack`` can
 build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
+programs are ``environment-modules``, and ``lmod``.
 
 A few notes on specific programs in this list:
 
@@ -919,6 +919,26 @@ a new ``curl``, then chances are the system-supplied version of these
 other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
 
+.. _ModuleSystems:
+
+^^^^^^^^^^^^^^
+Module Systems
+^^^^^^^^^^^^^^
+
+In order to use Spack's generated environment modules, you must have
+installed at least one of three supported module systems,
+``environment-modules``, ``lmod``, and ``dotkit``. Spack offers the option
+to install and manage any of these systems with ``spack bootstrap``.
+By looking at the contents of the `enabled` configuration key defined in
+`modules.yaml`, ``spack bootstrap`` installs the requested module systems.
+These systems can then be seemlessly activated by sourcing Spack's shell
+integration script ``setup-env.sh`` for ``bash``-like shell users.
+
+Below we detail how to set up these module systems manually if you are
+inclined to do so.
+
+See :ref:`modules` and :ref:`modules-tutorial` for detailed information
+about modules and how to use and maintain them.
 
 .. _InstallEnvironmentModules:
 
@@ -926,14 +946,13 @@ Once ``curl`` has been installed, you can similarly install the others.
 Environment Modules
 """""""""""""""""""
 
-In order to use Spack's generated environment modules, you must have
-installed one of *Environment Modules* or *Lmod*.  On many Linux
-distributions, this can be installed from the vendor's repository.  For
-example: ``yum install environment-modules`` (Fedora/RHEL/CentOS). If
-your Linux distribution does not have Environment Modules, Spack can
-build it for you!
+On many Linux distributions, Environemnt Modules can be installed from the vendor's
+repository.  For example: ``yum install environment-modules`` 
+(Fedora/RHEL/CentOS). If your Linux distribution does not have
+Environment Modules, Spack supports building it for you!
 
-What follows are three steps describing how to install and use environment-modules with spack.
+What follows are three steps describing how to install and use
+environment-modules with spack.
 
 #. Install ``environment-modules``.
 
@@ -995,6 +1014,64 @@ version 8.5 with whatever version is installed on your system:
               paths:
                   tcl@8.5: /usr
               buildable: False
+
+              
+.. _InstallLmod:
+
+"""""""""""""""""""
+Lmod
+"""""""""""""""""""
+
+On many Linux distributions, Lmod can be installed from the vendor's
+repository.  For example: ``yum install lmod`` (Fedora/RHEL/CentOS).
+If your Linux distribution does not have Lmod, Spack supports building
+it for you!
+
+What follows are three steps describing how to install and use
+Lmod with spack.
+
+#. Install ``lmod``.
+
+   * ``spack bootstrap`` will build ``lmod`` for you (and may build
+     other packages that are useful to the operation of Spack)
+
+   * Install ``lmod`` using ``spack install`` with
+     ``spack install lmod``
+
+#. Source the init script to make the ``module`` command available.
+
+   * If you are using ``bash`` or ``ksh``, Spack can currently do this for
+     you as well. After installing ``lmod`` following the step above,
+     source Spack's shell integration script. This will automatically
+     detect the lack of ``module``, and use the installed
+     ``lmod`` from ``spack bootstrap`` or ``spack install``.
+     
+     .. code-block:: console
+
+        # For bash/zsh users
+        $ export SPACK_ROOT=/path/to/spack
+        $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+
+   * If you prefer to do it manually,  you can activate with the following 
+     script (or apply the updates to your ``.bashrc`` file manually) where
+     `${CURRENT_SHELL}` is your current shell like `bash`, `ksh`, or `zsh`:
+
+         .. code-block:: sh
+
+            TMP=`tempfile`
+            echo >$TMP
+            LMOD_HOME=$(spack location --install-dir lmod)
+            echo "source ${LMOD_HOME}/lmod/lmod/init/${CURRENT_SHELL}" >> .bashrc
+
+      This is added to your ``.bashrc`` (or similar) files, enabling Lmod
+      when you log in.
+        
+#. Test that the ``module`` command is found with:
+
+   .. code-block:: console
+
+      $ module avail
 
 ^^^^^^^^^^^^^^^^^
 Package Utilities

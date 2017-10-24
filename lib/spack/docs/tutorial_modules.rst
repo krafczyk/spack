@@ -37,7 +37,7 @@ Before proceeding further ensure:
 - have :ref:`shell support <shell-support>` activated in Spack
 
 If you need to install Lmod or Environment module you can refer
-to the documentation :ref:`here <InstallEnvironmentModules>`.
+to the documentation :ref:`here <ModuleSystems>`.
 
 
 ^^^^^^^^^^^^^^^^^^
