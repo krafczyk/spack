@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 
 import llnl.util.tty as tty
 
@@ -40,7 +41,28 @@ class PackageManager(object):
         pass
 
     def list(self, search_item=None):
+        "Query the system package manager for a list of installed pacakges"
         pass
 
     def install(self, spec):
+        "Find and install the nearest native package which staisfies the spec."
+        pass
+
+    def file_list(self, package_name):
+        "Get list of files associated with an installed system package"
+        pass
+
+    def apply_map(self, filelist):
+        "Apply mapping heuristics returning a list mapping the system file path to the final prefix path"
+        mapping = []
+        for item in filelist:
+            map_result = self.file_map(item)
+            if map_result is not '':
+                # Don't include plain directories
+                if not os.path.isdir(item):
+                    mapping.append([item, map_result])
+        return mapping
+
+    def file_map(self, filepath):
+        "Heuristic map between installed file paths and final prefix path"
         pass
