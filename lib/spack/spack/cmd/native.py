@@ -41,7 +41,7 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='native_command')
     
     list_parser = sp.add_parser('list', help='list native packages spack finds')
-    list_parser.add_argument('search', type=str,
+    list_parser.add_argument('search', type=str, nargs='?', default=None,
                              help="search for a specific package")
 
 def native_list(args):
