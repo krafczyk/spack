@@ -40,8 +40,14 @@ class Arch64PackageManager(PackageManager):
         for line in lines:
             line_items = line.split(' ')
             if len(line_items) == 2:
+                add = False
                 if search_item and re.search(search_item, line_items[0]):
+                    add = True
+                elif search_item is None:
+                    add = True
+                if add:
                     found.append([line_items[0], line_items[1]])
+                    
         tty.info("Found %i packages" % len(found))
         for item in found:
             print("%s@%s" % (item[0], item[1]))
