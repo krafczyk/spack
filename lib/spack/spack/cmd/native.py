@@ -44,9 +44,20 @@ def setup_parser(subparser):
     list_parser.add_argument('search', type=str, nargs='?', default=None,
                              help="search for a specific package")
 
+    install_parser = sp.add_parser('install', help='install a native package')
+    install_parser.add_argument('spec', type=str,
+                                help="spec to attempt to install")
+
 def native_list(args):
-    get_manager().list(search_item = args.search)
+    found = get_manager().list(search_item = args.search)
+    tty.info("Found %i packages" % len(found))
+    for item in found:
+        print("%s@%s" % (item[0], item[1]))
+
+def native_install(args):
+    get_manager().install(args.spec)
 
 def native(self, args):
-    action = {'list': native_list}
+    action = {'list': native_list,
+              'install': native_install }
     action[args.native_command](args)

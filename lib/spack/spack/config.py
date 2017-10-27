@@ -82,6 +82,7 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
+    'packman': spack.schema.packman.schema
 }
 
 #: OrderedDict of config scopes keyed by name.
