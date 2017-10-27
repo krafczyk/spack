@@ -115,7 +115,28 @@ class Arch64PackageManager(PackageManager):
             tty.die(message)
 
         # We have one package which matches now
-        tty.info("%s@%s satisfies %s" % (matches[0][0], matches[0][1], spec))
+        tty.info("%s@%s satisfies %s" % (system_package_name, matches[0][1], spec))
+        tty.info("This package contains the following files:")
+        files = self.file_list(system_package_name)
+        print(files)
+        tty.info("The mapping will be:")
+        file_mapping = self.apply_map(files)
+        for mapping in file_mapping:
+            print("%s -> ${PREFIX}/%s" % (mapping[0], mapping[1]))
+
+
+    def file_list(self, package_name):
+        com_output = self.pacman('-Ql', package_name, output=str)
+        lines = com_output.split("\n")
+        files = []
+        for line in lines:
+            if line != "":
+                file_path = re.sub("^%s " % package_name, "", line)
+                files.append(file_path)
+        return files
+
+    def file_map(self, filepath):
+        return re.sub("^/usr/", "", filepath)
 
 @static_vars(manager=None)
 def fetch_manager():
