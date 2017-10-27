@@ -26,6 +26,11 @@
 import llnl.util.tty as tty
 
 
+def replace_vars(in_string, package, match):
+    in_string = in_string.replace('${PACKAGE}', package)
+    in_string = in_string.replace('${MATCH}', match)
+    return in_string
+
 class PackageManager(object):
     """ The Manager class is a high level interface with a native package
         manager.
@@ -34,5 +39,8 @@ class PackageManager(object):
     def __init__(self, *args):
         pass
 
-    def list(self):
+    def list(self, search_item=None):
+        pass
+
+    def install(self, spec):
         pass
