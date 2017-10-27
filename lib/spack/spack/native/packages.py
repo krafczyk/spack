@@ -23,9 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import re
+import copy
 
 import llnl.util.tty as tty
 
+import spack
 
 def replace_vars(in_string, package, match):
     in_string = in_string.replace('${PACKAGE}', package)
