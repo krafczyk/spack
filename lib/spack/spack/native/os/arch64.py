@@ -23,13 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
-import copy
 
 import llnl.util.tty as tty
 
 import spack.config
 from spack.util.decorators import static_vars
-from spack.native.packages import PackageManager, replace_vars
+from spack.native.packages import PackageManager
 from spack.util.executable import Executable
 
 class Arch64PackageManager(PackageManager):
