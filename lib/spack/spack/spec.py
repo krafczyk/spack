@@ -1084,8 +1084,35 @@ class Spec(object):
         self._concrete = kwargs.get('concrete', False)
 
         # Allow a spec to be constructed with an external path.
-        self.external_path = kwargs.get('external_path', None)
-        self.external_module = kwargs.get('external_module', None)
+        self._external_path = kwargs.get('external_path', None)
+        self._external_module = kwargs.get('external_module', None)
+        self.external_variant_refresh()
+
+    def external_variant_refresh(self):
+        if self.external:
+            if 'external' not in self.variants:
+                self.variants['external'] = BoolValuedVariant('external', True)
+        else:
+            if 'external' in self.variants:
+                del self.variants['external']
+
+    @property
+    def external_path(self):
+        return self._external_path
+
+    @external_path.setter
+    def external_path(self, path):
+        self._external_path = path
+        self.external_variant_refresh()
+
+    @property
+    def external_module(self):
+        return self._external_module
+
+    @external_module.setter
+    def external_module(self, module):
+        self._external_module = module
+        self.external_variant_refresh()
 
         self._full_hash = kwargs.get('full_hash', None)
 
@@ -2649,8 +2676,8 @@ class Spec(object):
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self.variants.spec = self
-        self.external_path = other.external_path
-        self.external_module = other.external_module
+        self._external_path = other._external_path
+        self._external_module = other._external_module
         self.namespace = other.namespace
 
         # Cached fields are results of expensive operations.
@@ -3406,8 +3433,9 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
-        spec.external_path = None
-        spec.external_module = None
+        spec._external_path = None
+        spec._external_module = None
+        spec.external_variant_refresh()
         spec.compiler_flags = FlagMap(spec)
         spec._dependents = DependencyMap()
         spec._dependencies = DependencyMap()
