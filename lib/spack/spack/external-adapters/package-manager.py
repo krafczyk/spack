@@ -40,6 +40,10 @@ class PackageManager(object):
         manager.
     """
 
+    @classmethod
+    def available(cls):
+        pass
+
     def __init__(self, *args):
         pass
 
