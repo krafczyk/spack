@@ -31,9 +31,13 @@ from spack.util.decorators import static_vars
 from spack.native.packages import PackageManager
 from spack.util.executable import Executable
 
-class Arch64PackageManager(PackageManager):
+class Pacman(PackageManager):
     pacman = Executable("pacman")
     archname = 'arch64'
+
+    @classmethod
+    def available(cls):
+        pass
 
     def list(self, search_item=None):
         pacman_output = self.pacman('-Q', output=str)

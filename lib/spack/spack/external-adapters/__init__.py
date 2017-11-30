@@ -24,8 +24,8 @@
 ##############################################################################
 
 import spack
-import spack.native.packages
+import spack.external_adapters.adapters
 from spack.native.classification import detect_class, class_manager_fetchers
 
-def get_manager():
+def get_supported_managers():
     return class_manager_fetchers[detect_class()]()
