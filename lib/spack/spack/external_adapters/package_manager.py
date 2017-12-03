@@ -49,7 +49,6 @@ class PackageManager(object):
         return "none"
 
     def __init__(self, *args):
-        self.manager_name = ""
         print("PackageManager Init called!")
 
     def install(self, spec, package_name=None):
@@ -64,7 +63,7 @@ class PackageManager(object):
 
             # Find whether there is plain rule for this package
             try:
-                rules_list = spack.config.get_config("packman")[self.manager_name][spec.name]
+                rules_list = spack.config.get_config("packman")[self.manager_name()][spec.name]
                 for rule in rules_list:
                     # Find whether a rule matches this spec.
                     rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
@@ -75,7 +74,7 @@ class PackageManager(object):
     
             if package_name is None:
                 # Check regex matching list
-                regex_list = spack.config.get_config("packman")[self.archname]['regex-matching-list']
+                regex_list = spack.config.get_config("packman")[self.manager_name()]['regex-matching-list']
     
                 for regex_item in regex_list:
                     match =  re.match("^%s$" % (regex_item['name']), spec.name)
@@ -96,12 +95,12 @@ class PackageManager(object):
                 tty.die("There was no appropriate plain rule nor regex rule for the package %s." % spec.name)
 
         # Check if system package exists
-        system_package_list = self.list()
+        package_list = self.list()
         matches = []
-        for system_package in system_package_list:
-            match = re.match("^%s$" % system_package_name, system_package[0])
+        for package in package_list:
+            match = re.match("^%s$" % package_name, package[0])
             if match:
-                matches.append([match.group(0), system_package[1]])
+                matches.append([match.group(0), package[1]])
 
         if len(matches) == 0:
             tty.die("Couldn't find any matching system packages which matched the pattern %s!" % shim_rule['pattern'])
@@ -113,12 +112,12 @@ class PackageManager(object):
             tty.die(message)
 
         # We have one package which matches now
-        tty.info("%s@%s satisfies %s" % (system_package_name, matches[0][1], spec))
+        tty.info("%s@%s satisfies %s" % (package_name, matches[0][1], spec))
         tty.info("This package contains the following files:")
-        files = self.file_list(system_package_name)
+        files = self.file_list(package_name)
         print(files)
         tty.info("The mapping will be:")
-        file_mapping = self.apply_map(files)
+        file_mapping = self.apply_map(package_name, files)
         for mapping in file_mapping:
             print("%s -> ${PREFIX}/%s" % (mapping[0], mapping[1]))
 
@@ -131,11 +130,11 @@ class PackageManager(object):
         "Get list of files associated with an installed system package"
         pass
 
-    def apply_map(self, filelist):
+    def apply_map(self, package_name, filelist):
         "Apply mapping heuristics returning a list mapping the system file path to the final prefix path"
         mapping = []
         for item in filelist:
-            map_result = self.file_map(item)
+            map_result = self.file_map(package_name, item)
             if map_result is not '':
                 # Don't include plain directories
                 if not os.path.isdir(item):

@@ -14,7 +14,7 @@
 #   ~/.spack/packman.yaml
 # -------------------------------------------------------------------------
 packman:
-  arch64:
+  pacman:
     python:
       - spec: "python@3:"
         package: "python"
