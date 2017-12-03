@@ -22,3 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+import spack
+import spack.external_adapters.adapters
+from spack.external_adapters.adapters import package_manager_list
+
+def get_available_package_managers():
+    manager_dict = {}
+    for manager in package_manager_list:
+        if manager.available():
+            manager_dict[manager.manager_name()] = manager
+
+    return manager_dict

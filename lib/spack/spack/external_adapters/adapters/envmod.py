@@ -22,10 +22,39 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import re
 
-import spack
-import spack.external_adapters.adapters
-from spack.native.classification import detect_class, class_manager_fetchers
+import llnl.util.tty as tty
 
-def get_supported_managers():
-    return class_manager_fetchers[detect_class()]()
+import spack.config
+from spack.util.decorators import static_vars
+from spack.external_adapters.package_manager import PackageManager
+from spack.util.executable import Executable, which
+
+class EnvModule(PackageManager):
+    @classmethod
+    def available(cls):
+        return False
+
+    @classmethod
+    def manager_name(cls):
+        return "envmod"
+
+    def __init__(self):
+        print("EnvModule Init called!")
+
+    def list(self, search_item=None):
+        return []
+
+    def file_list(self, package_name):
+        files = []
+        return files
+
+    def file_map(self, package_name, filepath):
+        return re.sub("^/usr/", "", filepath)
+
+#@static_vars(manager=None)
+#def fetch_manager():
+#    if fetch_manager.manager is None:
+#        manager = Path()
+#    return manager

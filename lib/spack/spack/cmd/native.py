@@ -31,7 +31,8 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-from spack.native import get_manager
+from spack.external_adapters import get_available_package_managers
+#from spack.external_adapters import get_manager
 
 description = "query native system packages "
 section = "developer"
@@ -39,6 +40,8 @@ level = "long"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='native_command')
+
+    list_avail_parser = sp.add_parser('list_available', help='list available native package managers spack finds')
     
     list_parser = sp.add_parser('list', help='list native packages spack finds')
     list_parser.add_argument('search', type=str, nargs='?', default=None,
@@ -48,16 +51,22 @@ def setup_parser(subparser):
     install_parser.add_argument('spec', type=str,
                                 help="spec to attempt to install")
 
-def native_list(args):
-    found = get_manager().list(search_item = args.search)
-    tty.info("Found %i packages" % len(found))
-    for item in found:
-        print("%s@%s" % (item[0], item[1]))
+def native_list_avail(args):
+    managers = get_available_package_managers()
+    for man_name in managers:
+        print(man_name)
+    
+#def native_list(args):
+#    found = get_manager().list(search_item = args.search)
+#    tty.info("Found %i packages" % len(found))
+#    for item in found:
+#        print("%s@%s" % (item[0], item[1]))
 
-def native_install(args):
-    get_manager().install(args.spec)
+#def native_install(args):
+#    get_manager().install(args.spec)
 
 def native(self, args):
-    action = {'list': native_list,
-              'install': native_install }
+    #action = {'list': native_list,
+    #          'install': native_install }
+    action = {'list_available': native_list_avail}
     action[args.native_command](args)

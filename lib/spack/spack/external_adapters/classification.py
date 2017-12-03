@@ -24,20 +24,4 @@
 ##############################################################################
 import platform
 
-from spack.native.os import arch64
 
-class_manager_fetchers = { ('linux', 'arch', 'x86_64'): arch64.fetch_manager }
-
-def detect_class():
-    resulting_class = ['','','']
-    platform_string = platform.platform()
-    if 'Linux' in platform_string:
-        resulting_class[0] = 'linux'
-
-    if 'with-arch' in platform_string:
-        resulting_class[1] = 'arch'
-
-    if 'x86_64' in platform_string:
-        resulting_class[2] = 'x86_64'
-
-    return tuple(resulting_class)

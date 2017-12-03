@@ -42,52 +42,58 @@ class PackageManager(object):
 
     @classmethod
     def available(cls):
-        pass
+        return False
+
+    @classmethod
+    def manager_name(cls):
+        return "none"
 
     def __init__(self, *args):
-        pass
+        self.manager_name = ""
+        print("PackageManager Init called!")
 
-    def install(self, spec):
+    def install(self, spec, package_name=None):
         "Find and install the nearest native package which staisfies the spec."
         # Get and concretize spec from command line
         specs = spack.cmd.parse_specs(spec, concretize=True)
         spec = specs[0]
 
-        # We need to find a matching package in the system repo
-        system_package_name = None
+        if package_name is None:
+            # We need to find a matching package in the external repo
+            package_name = None
 
-        # Find whether there is plain rule for this package
-        try:
-            rules_list = spack.config.get_config("packman")[self.archname][spec.name]
-            for rule in rules_list:
-                # Find whether a rule matches this spec.
-                rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
-                if spec.satisfies(rule_spec):
-                    system_package_name = rule['package']
-        except KeyError:
-            pass
-
-        if system_package_name is None:
-            # Check regex matching list
-            regex_list = spack.config.get_config("packman")[self.archname]['regex-matching-list']
-
-            for regex_item in regex_list:
-                match =  re.match("^%s$" % (regex_item['name']), spec.name)
-                if match:
-                    package = match.group(0)
-                    matched = match.group(1)
-                    for shim in regex_item['shims']:
-                        shim_spec_pattern = copy.copy(shim['spec'])
-                        shim_spec = replace_vars(shim_spec_pattern, package, matched)
-                        if spec.satisfies(shim_spec):
-                            shim_package_pattern = copy.copy(shim['package'])
-                            system_package_name = replace_vars(shim_package_pattern, package, matched)
+            # Find whether there is plain rule for this package
+            try:
+                rules_list = spack.config.get_config("packman")[self.manager_name][spec.name]
+                for rule in rules_list:
+                    # Find whether a rule matches this spec.
+                    rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
+                    if spec.satisfies(rule_spec):
+                        package_name = rule['package']
+            except KeyError:
+                pass
+    
+            if package_name is None:
+                # Check regex matching list
+                regex_list = spack.config.get_config("packman")[self.archname]['regex-matching-list']
+    
+                for regex_item in regex_list:
+                    match =  re.match("^%s$" % (regex_item['name']), spec.name)
+                    if match:
+                        package = match.group(0)
+                        matched = match.group(1)
+                        for shim in regex_item['shims']:
+                            shim_spec_pattern = copy.copy(shim['spec'])
+                            shim_spec = replace_vars(shim_spec_pattern, package, matched)
+                            if spec.satisfies(shim_spec):
+                                shim_package_pattern = copy.copy(shim['package'])
+                                package_name = replace_vars(shim_package_pattern, package, matched)
+                                break
+                        if package_name:
                             break
-                    if system_package_name:
-                        break
 
-        if system_package_name is None:
-            tty.die("There was no appropriate plain rule nor regex rule for the package %s." % spec.name)
+            if package_name is None:
+                tty.die("There was no appropriate plain rule nor regex rule for the package %s." % spec.name)
 
         # Check if system package exists
         system_package_list = self.list()
@@ -136,6 +142,6 @@ class PackageManager(object):
                     mapping.append([item, map_result])
         return mapping
 
-    def file_map(self, filepath):
+    def file_map(self, package_name, filepath):
         "Heuristic map between installed file paths and final prefix path"
         pass

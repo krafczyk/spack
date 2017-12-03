@@ -23,57 +23,40 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import os
 
 import llnl.util.tty as tty
 
 import spack.config
 from spack.util.decorators import static_vars
-from spack.native.packages import PackageManager
-from spack.util.executable import Executable
+from spack.external_adapters.package_manager import PackageManager
+from spack.util.executable import Executable, which
 
-class Pacman(PackageManager):
-    pacman = Executable("pacman")
-    archname = 'arch64'
-
+class Path(PackageManager):
     @classmethod
     def available(cls):
-        pass
+        return True
+
+    @classmethod
+    def manager_name(cls):
+        return "path"
+
+    def __init__(self):
+        print("Path Init called!")
 
     def list(self, search_item=None):
-        pacman_output = self.pacman('-Q', output=str)
-        lines = pacman_output.split("\n")
-        found = []
-        for line in lines:
-            line_items = line.split(' ')
-            if len(line_items) == 2:
-                add = False
-                if search_item and re.search(search_item, line_items[0]):
-                    add = True
-                elif search_item is None:
-                    add = True
-                if add:
-                    found.append([line_items[0], line_items[1]])
-                    
-        return found
-        tty.info("Found %i packages" % len(found))
-        for item in found:
-            print("%s@%s" % (item[0], item[1]))
+        return []
 
     def file_list(self, package_name):
-        com_output = self.pacman('-Ql', package_name, output=str)
-        lines = com_output.split("\n")
         files = []
-        for line in lines:
-            if line != "":
-                file_path = re.sub("^%s " % package_name, "", line)
-                files.append(file_path)
         return files
 
-    def file_map(self, filepath):
-        return re.sub("^/usr/", "", filepath)
+    def file_map(self, package_name, filepath):
+        full_path = os.path.abspath(package_name)
+        return re.sub("^{}".format(full_path), "", filepath)
 
-@static_vars(manager=None)
-def fetch_manager():
-    if fetch_manager.manager is None:
-        manager = Arch64PackageManager()
-    return manager
+#@static_vars(manager=None)
+#def fetch_manager():
+#    if fetch_manager.manager is None:
+#        manager = Path()
+#    return manager
