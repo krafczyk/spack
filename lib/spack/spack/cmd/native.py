@@ -44,10 +44,12 @@ def setup_parser(subparser):
     list_avail_parser = sp.add_parser('list_available', help='list available native package managers spack finds')
     
     list_parser = sp.add_parser('list', help='list native packages spack finds')
+    list_parser.add_argument('manager', type=str, help="package manager to list from")
     list_parser.add_argument('search', type=str, nargs='?', default=None,
                              help="search for a specific package")
 
     install_parser = sp.add_parser('install', help='install a native package')
+    install_parser.add_argument('manager', type=str, help="package manager to list from")
     install_parser.add_argument('spec', type=str,
                                 help="spec to attempt to install")
 
@@ -56,17 +58,32 @@ def native_list_avail(args):
     for man_name in managers:
         print(man_name)
     
-#def native_list(args):
-#    found = get_manager().list(search_item = args.search)
-#    tty.info("Found %i packages" % len(found))
-#    for item in found:
-#        print("%s@%s" % (item[0], item[1]))
+def native_list(args):
+    managers = get_available_package_managers()
+    if args.manager not in managers:
+        tty.error("%s is not available." % args.manager)
+        return
 
-#def native_install(args):
-#    get_manager().install(args.spec)
+    manager_cls = managers[args.manager]
+    manager = manager_cls()
+
+    found = manager.list(search_item = args.search)
+    for item in found:
+        print("%s@%s" % (item[0], item[1]))
+    tty.info("Found %i packages" % len(found))
+
+def native_install(args):
+    managers = get_available_package_managers()
+    if args.manager not in managers:
+        tty.error("%s is not available." % args.manager)
+
+    manager_cls = managers[args.manager]
+    manager = manager_cls()
+
+    manager.install(args.spec)
 
 def native(self, args):
-    #action = {'list': native_list,
-    #          'install': native_install }
-    action = {'list_available': native_list_avail}
+    action = {'list_available': native_list_avail,
+              'list': native_list,
+              'install': native_install}
     action[args.native_command](args)
