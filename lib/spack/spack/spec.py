@@ -1083,22 +1083,15 @@ class Spec(object):
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
 
-    @property
-    def external_manager(self):
-        return self.variants['external'].split(':', 1)[0]
-
-    @property
-    def external_package(self):
-        return self.variants['external'].split(':', 1)[1]
+        # Allow a spec to be constructed with an external path.
+        self.external_path = kwargs.get('external_path', None)
+        self.external_module = kwargs.get('external_module', None)
 
         self._full_hash = kwargs.get('full_hash', None)
 
     @property
     def external(self):
-        if self.variants['external'] != "":
-            return True
-        else:
-            return False
+        return bool(self.external_path) or bool(self.external_module)
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -2656,6 +2649,8 @@ class Spec(object):
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self.variants.spec = self
+        self.external_path = other.external_path
+        self.external_module = other.external_module
         self.namespace = other.namespace
 
         # Cached fields are results of expensive operations.
@@ -3411,7 +3406,8 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
-        spec.external_variant_refresh()
+        spec.external_path = None
+        spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
         spec._dependents = DependencyMap()
         spec._dependencies = DependencyMap()
