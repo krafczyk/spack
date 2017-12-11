@@ -72,6 +72,7 @@ from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
 from spack.util.log_parse import parse_log_events, make_log_context
+from spack.external_adapters import get_package_manager
 
 
 #
@@ -556,18 +557,19 @@ def parent_class_modules(cls):
     return result
 
 
-def load_external_modules(pkg):
-    """Traverse a package's spec DAG and load any external modules.
+def load_external(pkg):
+    """Traverse a package's spec DAG and load any external packages.
 
-    Traverse a package's dependencies and load any external modules
+    Traverse a package's dependencies and load any external packagess
     associated with them.
 
     Args:
         pkg (PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
-        if dep.external_module:
-            load_module(dep.external_module)
+        if dep.external:
+            manager = get_package_manager(dep.external_manager)
+            manager.load(dep)
 
 
 def setup_package(pkg, dirty):
@@ -619,7 +621,7 @@ def setup_package(pkg, dirty):
     if pkg.architecture.target.module_name:
         load_module(pkg.architecture.target.module_name)
 
-    load_external_modules(pkg)
+    load_external(pkg)
 
 
 def fork(pkg, function, dirty, fake):

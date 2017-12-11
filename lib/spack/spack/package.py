@@ -1298,7 +1298,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with spack.store.db.prefix_write_lock(self.spec):
                 yield
 
-    def _process_external_package(self, **kwargs):
+    def _process_external_package(self, explicit=False, **kwargs):
         """Helper function to process external packages.
 
         Runs post install hooks and registers the package in the DB.
@@ -1401,7 +1401,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
-            return self._process_external_package(**kwargs)
+            return self._process_external_package(explicit, **kwargs)
 
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)

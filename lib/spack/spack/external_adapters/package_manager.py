@@ -57,6 +57,9 @@ class PackageManager(object):
     def path(self, spec):
         return None
 
+    def load(self, spec):
+        print("Not Defined!")
+
     def check_package_name(self, spec, package_name):
         # Expect a spec object
 
@@ -224,6 +227,9 @@ class FileCopyPackageManager(PackageManager):
         tty.debug(msg.format(spec.short_spec))
         spack.store.layout.remove_install_directory(spec)
 
+    def load(self, spec):
+        pass
+
     def install_imp(self, spec, **kwargs):
         # Ensure package is not already installed
         layout = spack.store.layout
@@ -274,6 +280,11 @@ class ModulePackageManager(PackageManager):
 
     def uninstall(self, spec):
         pass
+
+    def load(self, spec):
+        print("Needs to be defined!!")
+        #need to define load_module
+        #load_module(spec.external_package)
 
     def install_imp(self, spec, **kwargs):
         message = '{s.name}@{s.version} : generating module file'
