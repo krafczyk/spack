@@ -27,11 +27,11 @@ import re
 import llnl.util.tty as tty
 
 import spack.config
-#from spack.util.decorators import static_vars
-from spack.external_adapters.package_manager import PackageManager
+from spack.util.decorators import static_vars
+from spack.external_adapters.package_manager import FileCopyPackageManager
 from spack.util.executable import Executable, which
 
-class Pacman(PackageManager):
+class Pacman(FileCopyPackageManager):
     @classmethod
     def available(cls):
         pacman_cmd = which('pacman')
@@ -81,8 +81,13 @@ class Pacman(PackageManager):
     def file_map(self, package_name, filepath):
         return re.sub("^/usr/", "", filepath)
 
-#@static_vars(manager=None)
-#def fetch_manager():
-#    if fetch_manager.manager is None:
-#        manager = Pacman()
-#    return manager
+def get_manager_class():
+    return Pacman
+
+@static_vars(manager=None)
+def fetch_manager():
+    if fetch_manager.manager is None:
+        fetch_manager.manager = Pacman()
+    return fetch_manager.manager
+
+manager_methods = [get_manager_class, fetch_manager]

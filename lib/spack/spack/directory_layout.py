@@ -34,6 +34,7 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack
 import spack.spec
 from spack.error import SpackError
+from spack.external_adapters import get_available_package_managers, get_package_manager
 
 
 def _check_concrete(spec):
@@ -210,7 +211,10 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         if spec.external:
-            return spec.external_path
+            manager = get_package_manager(spec.external_manager)
+            spec_path = manager.path(spec)
+            if spec_path is not None:
+                return spec_path
 
         path = spec.format(self.path_scheme)
         return path

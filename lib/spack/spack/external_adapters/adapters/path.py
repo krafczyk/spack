@@ -55,8 +55,17 @@ class Path(PackageManager):
         full_path = os.path.abspath(package_name)
         return re.sub("^{}".format(full_path), "", filepath)
 
-#@static_vars(manager=None)
-#def fetch_manager():
-#    if fetch_manager.manager is None:
-#        manager = Path()
-#    return manager
+    def install_imp(self, spec):
+        print("Not implemented yet!!")
+        pass
+
+def get_manager_class():
+    return Path
+
+@static_vars(manager=None)
+def fetch_manager():
+    if fetch_manager.manager is None:
+        fetch_manager.manager = Path()
+    return fetch_manager.manager
+
+manager_methods = [get_manager_class, fetch_manager]

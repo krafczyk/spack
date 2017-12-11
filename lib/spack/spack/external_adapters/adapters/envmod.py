@@ -46,6 +46,10 @@ class EnvModule(PackageManager):
     def list(self, search_item=None):
         return []
 
+    def install_imp(self, spec):
+        print("Not implemented yet!")
+        pass
+
     def file_list(self, package_name):
         files = []
         return files
@@ -53,8 +57,13 @@ class EnvModule(PackageManager):
     def file_map(self, package_name, filepath):
         return re.sub("^/usr/", "", filepath)
 
-#@static_vars(manager=None)
-#def fetch_manager():
-#    if fetch_manager.manager is None:
-#        manager = Path()
-#    return manager
+def get_manager_class():
+    return EnvModule
+
+@static_vars(manager=None)
+def fetch_manager():
+    if fetch_manager.manager is None:
+        fetch_manager.manager = Path()
+    return fetch_manager.manager
+
+manager_methods = [get_manager_class, fetch_manager]

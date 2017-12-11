@@ -271,7 +271,7 @@ class AbstractVariant(object):
     def _value_setter(self, value):
         # Store the original value
         self._original_value = value
-
+        
         if not isinstance(value, (tuple, list)):
             # Store a tuple of CSV string representations
             # Tuple is necessary here instead of list because the
@@ -399,6 +399,9 @@ class SingleValuedVariant(MultiValuedVariant):
         self._value = str(self._value[0])
 
     def __str__(self):
+        #if type(self.value) is str:
+        #    if self.value == "":
+        #        return ''
         return '{0}={1}'.format(self.name, self.value)
 
     @implicit_variant_conversion
@@ -584,7 +587,10 @@ class VariantMap(lang.HashableMap):
         for key in sorted_keys:
             vspec = self[key]
 
-            if not isinstance(vspec.value, bool):
+            if isinstance(vspec.value, str) and vspec.value == "":
+                # Skip empty strings!
+                continue
+            elif not isinstance(vspec.value, bool):
                 # add space before all kv pairs.
                 string.write(' ')
                 kv = True

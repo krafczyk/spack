@@ -25,12 +25,19 @@
 
 import spack
 import spack.external_adapters.adapters
-from spack.external_adapters.adapters import package_manager_list
+from spack.util.decorators import static_vars
+from spack.external_adapters.adapters import adapter_methods
 
+@static_vars(manager_dict=None)
 def get_available_package_managers():
-    manager_dict = {}
-    for manager in package_manager_list:
-        if manager.available():
-            manager_dict[manager.manager_name()] = manager
+    if get_available_package_managers.manager_dict is None:
+        get_available_package_managers.manager_dict = {}
+        for adapter_method in adapter_methods:
+            manager_class = adapter_method[0]()
+            if manager_class.available():
+                get_available_package_managers.manager_dict[manager_class.manager_name()] = adapter_method[1]
 
-    return manager_dict
+    return get_available_package_managers.manager_dict
+
+def get_package_manager(name):
+    return get_available_package_managers()[name]()

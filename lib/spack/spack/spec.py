@@ -113,6 +113,7 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
 import spack
 import spack.architecture
@@ -138,6 +139,7 @@ from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
 from spack.variant import UnsatisfiableVariantSpecError
 from spack.version import VersionList, VersionRange, Version, ver
+from spack.external_adapters import get_package_manager
 from yaml.error import MarkedYAMLError
 
 __all__ = [
@@ -1085,20 +1087,37 @@ class Spec(object):
 
     @property
     def external_manager(self):
-        return self.variants['external'].split(':', 1)[0]
+        ext_val = self.external
+        if ext_val == "":
+            return ""
+        else:
+            splits = ext_val.split(':', 1)
+            if len(splits) < 1:
+                tty.die("No manager defined!")
+            else:
+                return ext_val.split(':', 1)[0]
 
     @property
     def external_package(self):
-        return self.variants['external'].split(':', 1)[1]
+        ext_val = self.external
+        if ext_val == "":
+            return ""
+        else:
+            splits = ext_val.split(':', 1)
+            if len(splits) < 2:
+                return ""
+            else:
+                return ext_val.split(':', 1)[1]
 
         self._full_hash = kwargs.get('full_hash', None)
 
     @property
     def external(self):
-        if self.variants['external'] != "":
-            return True
+        evar = self.variants.setdefault('external', MultiValuedVariant('external', ("")))
+        if len(evar.value) == 0:
+            return ""
         else:
-            return False
+            return evar.value
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -1475,12 +1494,6 @@ class Spec(object):
         if params:
             d['parameters'] = params
 
-        if self.external:
-            d['external'] = {
-                'path': self.external_path,
-                'module': bool(self.external_module)
-            }
-
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
         deps = self.dependencies_dict(deptype=('link', 'run'))
@@ -1548,21 +1561,21 @@ class Spec(object):
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
 
-        if 'external' in node:
-            spec.external_path = None
-            spec.external_module = None
-            # This conditional is needed because sometimes this function is
-            # called with a node already constructed that contains a 'versions'
-            # and 'external' field. Related to virtual packages provider
-            # indexes.
-            if node['external']:
-                spec.external_path = node['external']['path']
-                spec.external_module = node['external']['module']
-                if spec.external_module is False:
-                    spec.external_module = None
-        else:
-            spec.external_path = None
-            spec.external_module = None
+        #if 'external' in node:
+        #    spec.external_path = None
+        #    spec.external_module = None
+        #    # This conditional is needed because sometimes this function is
+        #    # called with a node already constructed that contains a 'versions'
+        #    # and 'external' field. Related to virtual packages provider
+        #    # indexes.
+        #    if node['external']:
+        #        spec.external_path = node['external']['path']
+        #        spec.external_module = node['external']['module']
+        #        if spec.external_module is False:
+        #            spec.external_module = None
+        #else:
+        #    spec.external_path = None
+        #    spec.external_module = None
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
@@ -1666,6 +1679,25 @@ class Spec(object):
         if self.concrete:
             visited.add(self.name)
             return False
+
+        # Perform external processing
+        if self.external:
+            # Get requested manager
+            try:
+                manager = get_package_manager(self.external_manager)
+            except:
+                tty.die("Package manager %s is not available." % self.external_manager)
+        
+            if self.external_package:
+                if not manager.check_package_name(self, self.external_package):
+                    tty.die("package {package} doesn't satisfy spec {name}".format(package=self.external_package, name=self.name))
+            else:
+                package_name = manager.get_package_name(self)
+
+                tty.msg("external package {package} from manager {manager} has been chosen to satisfy the spec {spec}.".format(package=package_name, manager=manager.manager_name(), spec=self))
+
+                self.variants['external'].value = "{manager}:{package}".format(manager=manager.manager_name(), package=package_name)
+                return True
 
         changed = False
 
@@ -1789,11 +1821,7 @@ class Spec(object):
                         feq(replacement.compiler, spec.compiler) and
                         feq(replacement.architecture, spec.architecture) and
                         feq(replacement._dependencies, spec._dependencies) and
-                        feq(replacement.variants, spec.variants) and
-                        feq(replacement.external_path,
-                            spec.external_path) and
-                        feq(replacement.external_module,
-                            spec.external_module)):
+                        feq(replacement.variants, spec.variants)):
                     continue
                 # Refine this spec to the candidate. This uses
                 # replace_with AND dup so that it can work in
@@ -1838,6 +1866,7 @@ class Spec(object):
                        self._concretize_helper())
             changed = any(changes)
             force = True
+
 
         for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
@@ -1894,14 +1923,14 @@ class Spec(object):
                 p = getattr(mvar, '_patches_in_order_of_appearance', [])
                 mvar._patches_in_order_of_appearance = dedupe(p + patches)
 
-        for s in self.traverse():
-            if s.external_module:
-                compiler = spack.compilers.compiler_for_spec(
-                    s.compiler, s.architecture)
-                for mod in compiler.modules:
-                    load_module(mod)
-
-                s.external_path = get_path_from_module(s.external_module)
+        # TEMP Get rid of this system for now.
+        #for s in self.traverse():
+        #    if s.external_module:
+        #        compiler = spack.compilers.compiler_for_spec(
+        #            s.compiler, s.architecture)
+        #        for mod in compiler.modules:
+        #            load_module(mod)
+        #        s.external_path = get_path_from_module(s.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -2637,8 +2666,6 @@ class Spec(object):
                        self.variants != other.variants and
                        self._normal != other._normal and
                        self.concrete != other.concrete and
-                       self.external_path != other.external_path and
-                       self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
 
         self._package = None
@@ -3411,7 +3438,6 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
-        spec.external_variant_refresh()
         spec.compiler_flags = FlagMap(spec)
         spec._dependents = DependencyMap()
         spec._dependencies = DependencyMap()

@@ -31,8 +31,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-from spack.external_adapters import get_available_package_managers
-#from spack.external_adapters import get_manager
+from spack.external_adapters import get_available_package_managers, get_package_manager
 
 description = "query native system packages "
 section = "developer"
@@ -59,13 +58,11 @@ def native_list_avail(args):
         print(man_name)
     
 def native_list(args):
-    managers = get_available_package_managers()
-    if args.manager not in managers:
+    try:
+        manager = get_package_manager(args.manager)
+    except:
         tty.error("%s is not available." % args.manager)
         return
-
-    manager_cls = managers[args.manager]
-    manager = manager_cls()
 
     found = manager.list(search_item = args.search)
     for item in found:
@@ -73,12 +70,10 @@ def native_list(args):
     tty.info("Found %i packages" % len(found))
 
 def native_install(args):
-    managers = get_available_package_managers()
-    if args.manager not in managers:
+    try:
+        manager = get_package_manager(args.manager)
+    except:
         tty.error("%s is not available." % args.manager)
-
-    manager_cls = managers[args.manager]
-    manager = manager_cls()
 
     manager.install(args.spec)
 

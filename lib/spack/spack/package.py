@@ -78,6 +78,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
 from spack.util.package_hash import package_hash
 from spack.version import Version
+from spack.external_adapters import get_package_manager
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1297,7 +1298,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             with spack.store.db.prefix_write_lock(self.spec):
                 yield
 
-    def _process_external_package(self, explicit):
+    def _process_external_package(self, **kwargs):
         """Helper function to process external packages.
 
         Runs post install hooks and registers the package in the DB.
@@ -1307,14 +1308,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 the user, False if it was pulled in as a dependency of an
                 explicit package.
         """
-        if self.spec.external_module:
-            message = '{s.name}@{s.version} : has external module in {module}'
-            tty.msg(message.format(s=self, module=self.spec.external_module))
-            message = '{s.name}@{s.version} : is actually installed in {path}'
-            tty.msg(message.format(s=self, path=self.spec.external_path))
-        else:
-            message = '{s.name}@{s.version} : externally installed in {path}'
-            tty.msg(message.format(s=self, path=self.spec.external_path))
+        message = '{s.name}@{s.version} : was requested to be installed from package manager {manager}'
+        tty.msg(message.format(s=self, manager=self.spec.external_manager))
+        
         try:
             # Check if the package was already registered in the DB
             # If this is the case, then just exit
@@ -1325,16 +1321,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self._update_explicit_entry_in_db(rec, explicit)
 
         except KeyError:
-            # If not register it and generate the module file
+            # If not, perform the external package's install procedure
+            # and generate the appropriate module file.
             # For external packages we just need to run
             # post-install hooks to generate module files
-            message = '{s.name}@{s.version} : generating module file'
-            tty.msg(message.format(s=self))
-            spack.hooks.post_install(self.spec)
-            # Add to the DB
-            message = '{s.name}@{s.version} : registering into DB'
-            tty.msg(message.format(s=self))
-            spack.store.db.add(self.spec, None, explicit=explicit)
+            
+            try:
+                manager = get_package_manager(self.spec.external_manager)
+            except:
+                tty.die("Package manager %s is not available." % self.spec.external_manager)
+        
+            manager.install(self.spec, **kwargs)
 
     def _update_explicit_entry_in_db(self, rec, explicit):
         if explicit and not rec.explicit:
@@ -1404,7 +1401,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
         if self.spec.external:
-            return self._process_external_package(explicit)
+            return self._process_external_package(**kwargs)
 
         restage = kwargs.get('restage', False)
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
@@ -1866,6 +1863,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
                 spack.store.layout.remove_install_directory(spec)
+            else:
+                try:
+                    manager = get_package_manager(spec.external_manager)
+                except:
+                    tty.die("manager {} not available!".format(spec.external_manager))
+                manager.uninstall(spec)
             # Delete DB entry
             msg = 'Deleting DB entry [{0}]'
             tty.debug(msg.format(spec.short_spec))

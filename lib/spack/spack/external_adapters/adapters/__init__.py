@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-from .pacman import Pacman
-from .path import Path
-from .envmod import EnvModule
+from .pacman import manager_methods as pacman_manager_methods
+from .path import manager_methods as path_manager_methods
+from .envmod import manager_methods as envmod_manager_methods
 
-package_manager_list = [ Pacman, Path, EnvModule ]
+adapter_methods = [pacman_manager_methods, path_manager_methods, envmod_manager_methods]
