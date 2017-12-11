@@ -133,7 +133,7 @@ from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.util.spack_yaml import syaml_dict
 from spack.util.string import comma_or
-from spack.variant import MultiValuedVariant, AbstractVariant
+from spack.variant import MultiValuedVariant, SingleValuedVariant, AbstractVariant
 from spack.variant import BoolValuedVariant, substitute_abstract_variants
 from spack.variant import VariantMap, UnknownVariantError
 from spack.variant import DuplicateVariantError
@@ -1113,11 +1113,8 @@ class Spec(object):
 
     @property
     def external(self):
-        evar = self.variants.setdefault('external', MultiValuedVariant('external', ("")))
-        if len(evar.value) == 0:
-            return ""
-        else:
-            return evar.value
+        evar = self.variants.setdefault('external', SingleValuedVariant('external', ("")))
+        return evar.value
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
