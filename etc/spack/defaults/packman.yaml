@@ -15,24 +15,10 @@
 # -------------------------------------------------------------------------
 packman:
   pacman:
-    bzip2:
-      - spec: "bzip2"
-        package: "bzip2"
     zlib:
       - spec: "zlib"
         package: "zlib"
-    tcl:
-      - spec: "tcl"
-        package: "tcl"
-    ncurses:
-      - spec: "ncurses"
-        package: "ncurses"
-    readline:
-      - spec: "readline"
-        package: "readline"
-    sqlite:
-      - spec: "sqlite"
-        package: "sqlite"
+        version-demangle: "1:(.*)"
     openssl:
       - spec: "openssl@1.0"
         package: "openssl-1.0"
