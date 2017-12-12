@@ -1704,8 +1704,8 @@ class Spec(object):
                 changed = True
             # perform version checks
             set_version = False
-            if Version(package_version).satisfies(self.version):
-                if self.version.concrete:
+            if VersionList([package_version]).satisfies(self.versions):
+                if self.versions.concrete:
                     if Version(package_version) != self.version:
                         set_version = True
                 else:
@@ -1722,25 +1722,22 @@ class Spec(object):
             config_variables = spack.config.get_config('config')
             external_affinity = config_variables['external-affinity']
             if external_affinity == 'yes':
-                 manager_affinity = config_variables['manager-affinity']
-                 package_manager = None
-                 package_name = None
-                 package_version = None
-                 for manager_name in manager_affinity:
-                      try:
-                          manager = get_package_manager(manager_name)
-                      except:
-                          tty.die("Manager {manager} in manager_affinity list is not an available package manager.".format(manager=manager_name))
-                      package_info = manager.get_package_info(self)
-                      if package_info is not None:
-                          package_name = package_info[0]
-                          package_version = package_info[1]
-                          try:
-                              if Version(package_version).satisfies(self.version):
-                                  package_manager = manager_name
-                                  break
-                          except SpecError:
-                              pass
+                manager_affinity = config_variables['manager-affinity']
+                package_manager = None
+                package_name = None
+                package_version = None
+                for manager_name in manager_affinity:
+                    try:
+                        manager = get_package_manager(manager_name)
+                    except:
+                        tty.die("Manager {manager} in manager_affinity list is not an available package manager.".format(manager=manager_name))
+                    package_info = manager.get_package_info(self)
+                    if package_info is not None:
+                        package_name = package_info[0]
+                        package_version = package_info[1]
+                        if VersionList([package_version]).satisfies(self.versions):
+                            package_manager = manager_name
+                            break
             if (package_manager is not None) and \
 	       (package_name is not None) and \
 	       (package_version is not None):
