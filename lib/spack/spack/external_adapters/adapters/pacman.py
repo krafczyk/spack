@@ -27,7 +27,7 @@ import re
 import llnl.util.tty as tty
 
 import spack.config
-from spack.util.decorators import static_vars
+from spack.util.decorators import static_vars, memoize_class
 from spack.external_adapters.package_manager import FileCopyPackageManager
 from spack.util.executable import Executable, which
 
@@ -48,6 +48,8 @@ class Pacman(FileCopyPackageManager):
         print("Pacman Init called!")
         self.pacman = Executable("pacman")
 
+    # We want to cache results
+    @memoize_class
     def list(self, search_item=None):
         pacman_output = self.pacman('-Q', output=str)
         lines = pacman_output.split("\n")

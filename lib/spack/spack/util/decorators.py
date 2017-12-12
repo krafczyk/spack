@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-from functools import wraps
+from functools import wraps, partial
 
 def static_vars(**kwargs):
     def decorate(func):
@@ -32,7 +32,7 @@ def static_vars(**kwargs):
         return func
     return decorate
 
-def memoize(function):
+def memoize_plain(function):
     memo = {}
     @wraps(function)
     def wrapper(*args):
@@ -43,3 +43,23 @@ def memoize(function):
             memo[args] = rv
             return rv
     return wrapper
+
+class memoize_class(object):
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self.func
+        return partial(self, obj)
+    def __call__(self, *args, **kw):
+        obj = args[0]
+        try:
+            cache = obj.__cache
+        except AttributeError:
+            cache = obj.__cache = {}
+        key = (self.func, args[1:], frozenset(kw.items()))
+        try:
+            res = cache[key]
+        except KeyError:
+            res = cache[key] = self.func(*args, **kw)
+        return res
