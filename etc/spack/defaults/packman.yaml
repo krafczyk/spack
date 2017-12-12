@@ -15,6 +15,29 @@
 # -------------------------------------------------------------------------
 packman:
   pacman:
+    bzip2:
+      - spec: "bzip2"
+        package: "bzip2"
+    zlib:
+      - spec: "zlib"
+        package: "zlib"
+    tcl:
+      - spec: "tcl"
+        package: "tcl"
+    ncurses:
+      - spec: "ncurses"
+        package: "ncurses"
+    readline:
+      - spec: "readline"
+        package: "readline"
+    sqlite:
+      - spec: "sqlite"
+        package: "sqlite"
+    openssl:
+      - spec: "openssl@1.0"
+        package: "openssl-1.0"
+      - spec: "openssl@1.1:"
+        package: "openssl"
     python:
       - spec: "python@3:"
         package: "python"
