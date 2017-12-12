@@ -123,6 +123,7 @@ import spack.parse
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.config
 
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
@@ -1714,6 +1715,26 @@ class Spec(object):
                 changed = True
             if changed:
                 return changed
+        else:
+            # Attempt to change to external if affinity is set
+            config_variables = spack.config.get_config('config')
+            external_affinity = config_variables['external-affinity']
+            if external_affinity == 'yes':
+                 manager_affinity = config_variables['manager-affinity']
+                 package_manager = None
+                 package_name = None
+                 for manager_name in manager_affinity:
+                      try:
+                          manager = get_package_manager(manager_name)
+                      except:
+                          tty.die("Manager {manager} in manager_affinity list is not an available package manager.".format(manager=manager_name))
+                      package_name = manager.get_package_name(self)
+                      if package_name is not None:
+                          package_manager = manager_name
+                          break
+                 if (package_manager is not None) and (package_name is not None):
+                      self.variants['external'].value = "{manager}:{package}".format(manager=package_manager, package=package_name)
+                      return True
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
