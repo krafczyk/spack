@@ -1688,19 +1688,21 @@ class Spec(object):
             except:
                 tty.die("Package manager %s is not available." % self.external_manager)
         
+            # Get external package information most closely related to this spec
+            package_info = manager.get_package_info(self)
+            if package_info is None:
+                tty.die("Couldn't find an external package satisfying this package!")
+            package_name = package_info[0]
+            package_version = package_info[1]
+            # perform package checks
             if self.external_package:
-                if not manager.check_package_name(self, self.external_package):
+                if self.external_package != package_name:
                     tty.die("package {package} doesn't satisfy spec {name}".format(package=self.external_package, name=self.name))
             else:
-                package_name = manager.get_package_name(self)
-
                 tty.msg("external package {package} from manager {manager} has been chosen to satisfy the spec {spec}.".format(package=package_name, manager=manager.manager_name(), spec=self))
                 self.variants['external'].value = "{manager}:{package}".format(manager=manager.manager_name(), package=package_name)
                 changed = True
-            package_name = self.external_package
-            package_version = manager.get_package_version(package_name)
-            if package_version is None:
-                tty.die("Couldn't get version of external package {package} from manager {manager}".format(package=package_name, manager=manager.manager_name()))
+            # perform version checks
             set_version = False
             if Version(package_version).satisfies(self.version):
                 if self.version.concrete:
@@ -1723,23 +1725,29 @@ class Spec(object):
                  manager_affinity = config_variables['manager-affinity']
                  package_manager = None
                  package_name = None
+                 package_version = None
                  for manager_name in manager_affinity:
                       try:
                           manager = get_package_manager(manager_name)
                       except:
                           tty.die("Manager {manager} in manager_affinity list is not an available package manager.".format(manager=manager_name))
-                      package_name = manager.get_package_name(self)
-                      if package_name is not None:
-                          package_version = manager.get_package_version(package_name)
+                      package_info = manager.get_package_info(self)
+                      if package_info is not None:
+                          package_name = package_info[0]
+                          package_version = package_info[1]
                           try:
                               if Version(package_version).satisfies(self.version):
                                   package_manager = manager_name
                                   break
                           except SpecError:
                               pass
-                 if (package_manager is not None) and (package_name is not None):
+            if (package_manager is not None) and \
+	       (package_name is not None) and \
+	       (package_version is not None):
                       # Change to external
                       self.variants['external'].value = "{manager}:{package}".format(manager=package_manager, package=package_name)
+                      # set version
+                      self.versions = VersionList([package_version])
                       # Trim dependencies
                       self._dependencies = DependencyMap()
                       return True

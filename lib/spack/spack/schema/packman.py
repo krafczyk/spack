@@ -47,7 +47,8 @@ schema = {
                         'default': [],
                         'properties': {
                             'spec': {'type': 'string'},
-                            'package': {'type': 'string'}
+                            'package': {'type': 'string'},
+                            'version-demangle': {'type': 'string'}
                         }
                     }
                 },
@@ -66,7 +67,8 @@ schema = {
                                         'type': 'object',
                                         'properties': {
                                             'spec': {'type': 'string'},
-                                            'package': {'type': 'string'}
+                                            'package': {'type': 'string'},
+                                            'version-demangle': {'type': 'string'}
                                         }
                                     }
                                 }

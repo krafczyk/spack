@@ -61,102 +61,12 @@ class PackageManager(object):
     def load(self, spec):
         print("Not Defined!")
 
-    def check_package_name(self, spec, package_name):
-        # Expect a spec object
-
-        package_candidates = []
-        # Find whether there is plain rule for this package
-        try:
-            rules_list = spack.config.get_config("packman")[self.manager_name()][spec.name]
-            for rule in rules_list:
-                # Find whether a rule matches this spec.
-                rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
-                if spec.satisfies(rule_spec):
-                    package_candidates.append(rule['package'])
-        except KeyError:
-            pass
-
-        if len(package_candidates) == 0:
-            # Check regex matching list
-            regex_list = spack.config.get_config("packman")[self.manager_name()]['regex-matching-list']
-
-            for regex_item in regex_list:
-                match =  re.match("^%s$" % (regex_item['name']), spec.name)
-                if match:
-                    package = match.group(0)
-                    matched = match.group(1)
-                    for shim in regex_item['shims']:
-                        shim_spec_pattern = copy.copy(shim['spec'])
-                        shim_spec = replace_vars(shim_spec_pattern, package, matched)
-                        if spec.satisfies(shim_spec):
-                            shim_package_pattern = copy.copy(shim['package'])
-                            package_candidates.append(replace_vars(shim_package_pattern, package, matched))
-
-        if len(package_candidates) == 0:
-            tty.die("There was no appropriate plain rule nor regex rule for the package %s." % spec.name)
-        if len(package_candidates) > 1:
-            message = "There were multiple matching plain rules or regex rules for the package %s.\n" % spec.name
-            message += "They were:\n"
-            for package in package_candidates:
-                message += "    %s\n" % package
-            tty.die(message)
-
-        if package_name == package_candidates[0]:
-            return True
-        else:
-            return False
-
-    def get_package_name(self, spec):
-        # Expect a spec object
-
-        # We need to find a matching package in the external repo
-        package_candidates = []
-
-        # Find whether there is plain rule for this package
-        try:
-            rules_list = spack.config.get_config("packman")[self.manager_name()][spec.name]
-            for rule in rules_list:
-                # Find whether a rule matches this spec.
-                rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
-                if spec.satisfies(rule_spec):
-                    package_candidates.append(rule['package'])
-        except KeyError:
-            pass
-
-        if len(package_candidates) == 0:
-            # Check regex matching list
-            regex_list = spack.config.get_config("packman")[self.manager_name()]['regex-matching-list']
-
-            for regex_item in regex_list:
-                match =  re.match("^%s$" % (regex_item['name']), spec.name)
-                if match:
-                    package = match.group(0)
-                    matched = match.group(1)
-                    for shim in regex_item['shims']:
-                        shim_spec_pattern = copy.copy(shim['spec'])
-                        shim_spec = replace_vars(shim_spec_pattern, package, matched)
-                        if spec.satisfies(shim_spec):
-                            shim_package_pattern = copy.copy(shim['package'])
-                            package_candidates.append(replace_vars(shim_package_pattern, package, matched))
-
-        if len(package_candidates) == 0:
-            return None
-        if len(package_candidates) > 1:
-            message = "There were multiple matching plain rules or regex rules for the package %s.\n" % spec.name
-            message += "They were:\n"
-            for package in package_candidates:
-                message += "    %s\n" % package
-            tty.error(message)
-            return None
-
-        return package_candidates[0]
-
-    def check_package_exists(self, spec):
+    def check_package_exists(self, package_name):
         # Check if package exists in manager
         package_list = self.list()
         matches = []
         for package in package_list:
-            match = re.match("^%s$" % spec.external_package, package[0])
+            match = re.match("^%s$" % package_name, package[0])
             if match:
                 matches.append([match.group(0), package[1]])
 
@@ -172,6 +82,81 @@ class PackageManager(object):
             return False
         return True
 
+    def get_package_translation_rules(self, spec):
+        rule_candidates = []
+        try:
+            rules_list = spack.config.get_config("packman")[self.manager_name()][spec.name]
+            for rule in rules_list:
+                # Find whether a rule matches this spec.
+                rule_spec = spack.cmd.parse_specs(rule['spec'])[0]
+                if spec.satisfies(rule_spec):
+                    try:
+                        version_demangle = rule['version-demangle']
+                    except KeyError:
+                        version_demangle = ''
+                    rule_candidates.append([rule['package'],version_demangle])
+        except KeyError:
+            pass
+
+        if len(rule_candidates) == 0:
+            # Check regex matching list
+            regex_list = spack.config.get_config("packman")[self.manager_name()]['regex-matching-list']
+
+            for regex_item in regex_list:
+                match =  re.match("^%s$" % (regex_item['name']), spec.name)
+                if match:
+                    package = match.group(0)
+                    matched = match.group(1)
+                    for shim in regex_item['shims']:
+                        shim_spec_pattern = copy.copy(shim['spec'])
+                        shim_spec = replace_vars(shim_spec_pattern, package, matched)
+                        if spec.satisfies(shim_spec):
+                            shim_package_pattern = copy.copy(shim['package'])
+                            try:
+                                version_demangle = rule['version-demangle']
+                            except KeyError:
+                                version_demangle = ''
+                            rule_candidates.append([replace_vars(shim_package_pattern, package, matched),version_demangle])
+
+        if len(rule_candidates) == 0:
+            # Pass out a plain rule. i.e. same name as spack package, no version translation
+            rule_candidates.append([spec.name, ''])
+        if len(rule_candidates) > 1:
+            message = "There were multiple matching plain rules or regex rules for the package %s.\n" % spec.name
+            message += "They were:\n"
+            for rule in rule_candidates:
+                message += "    %s\n" % rule
+            tty.die(message)
+        return rule_candidates
+
+    def check_package_name(self, spec, package_name):
+        rule_candidates = self.get_package_translation_rules(spec)
+        if package_name == rule_candidates[0]:
+            return True
+        else:
+            return False
+
+    @memoize_class
+    def get_package_info(self, spec):
+        # Expect a spec object
+
+        # We need to find a matching package in the external repo
+        [ package_name, version_demangle] = self.get_package_translation_rules(spec)[0]
+        package_list = self.list()
+        for package_info in package_list:
+            if package_name == package_info[0]:
+                package_version = None
+                if version_demangle != "":
+                    match = re.match(version_demangle, package_info[1])
+                    if match:
+                        package_version = match.group(1)
+                    else:
+                        tty.warn("Problem using version extraction! falling back to full version")
+                if package_version is None:
+                    package_version = package_info[1]
+                return [ package_name, package_version ]
+        return None
+
     def install_imp(self, spec, **kwargs):
         print("Not Implemented yet!!")
         pass
@@ -180,7 +165,7 @@ class PackageManager(object):
         "Find and install the specified external package."
         # Expect a concretized spec
 
-        if not self.check_package_exists(spec):
+        if not self.check_package_exists(spec.external_package):
             tty.die("Couldn't find a single package to install!")
 
         self.install_imp(spec, **kwargs)
@@ -191,14 +176,6 @@ class PackageManager(object):
     def list(self, search_item=None):
         "Query the system package manager for a list of installed packages"
         pass
-
-    @memoize_class
-    def get_package_version(self, package_name):
-        package_list = self.list()
-        for package_info in package_list:
-            if package_name == package_info[0]:
-                return package_info[1]
-        return None
 
     def file_list(self, package_name):
         "Get list of files associated with an installed system package"
