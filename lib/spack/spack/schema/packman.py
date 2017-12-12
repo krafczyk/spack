@@ -75,40 +75,6 @@ schema = {
                     }
                 },
                 'required': ['regex-matching-list']
-#                'additionalProperties': {
-#                },
-#                'items': {
-#                    'type': 'object',
-#                    'properties': {
-#                        'name': {'type': 'string'},
-#                        'regex': {'type': 'boolean'},
-#                        'demangler': {'type': 'string'},
-#                        'shims': {
-#                            'type': 'array',
-#                            'default': [],
-#                            'properties': {
-#                                'spec': {'type': 'string'},
-#                                'pattern': {'type': 'string'}
-#                            }
-#                        }
-#                    }
-#                }
-                #'additionalProperties': False,
-                #'patternProperties': {
-                #    r'\w[\w-]*': { # spack package name
-                #        'type': 'array',
-                #        'default': [],
-                #        'items': {
-                #            'type': 'object',
-                #            'properties': {
-                #                'spec': {'type': 'string'},
-                #                'pattern': {'type': 'string'},
-                #                'premangler': {'type': 'string'},
-                #                'demangler': {'type': 'string'}
-                #            }
-                #        }
-                #    }
-                #}
             }
         }
     }
