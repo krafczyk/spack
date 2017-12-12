@@ -113,7 +113,7 @@ class PackageManager(object):
                         if spec.satisfies(shim_spec):
                             shim_package_pattern = copy.copy(shim['package'])
                             try:
-                                version_demangle = rule['version-demangle']
+                                version_demangle = shim['version-demangle']
                             except KeyError:
                                 version_demangle = ''
                             rule_candidates.append([replace_vars(shim_package_pattern, package, matched),version_demangle])
