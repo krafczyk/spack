@@ -1677,6 +1677,8 @@ class Spec(object):
             visited.add(self.name)
             return False
 
+        changed = False
+
         # Perform external processing
         if self.external:
             # Get requested manager
@@ -1692,11 +1694,26 @@ class Spec(object):
                 package_name = manager.get_package_name(self)
 
                 tty.msg("external package {package} from manager {manager} has been chosen to satisfy the spec {spec}.".format(package=package_name, manager=manager.manager_name(), spec=self))
-
                 self.variants['external'].value = "{manager}:{package}".format(manager=manager.manager_name(), package=package_name)
-                return True
-
-        changed = False
+                changed = True
+            package_name = self.external_package
+            package_version = manager.get_package_version(package_name)
+            if package_version is None:
+                tty.die("Couldn't get version of external package {package} from manager {manager}".format(package=package_name, manager=manager.manager_name()))
+            set_version = False
+            if Version(package_version).satisfies(self.version):
+                if self.version.concrete:
+                    if Version(package_version) != self.version:
+                        set_version = True
+                else:
+                    set_version = True
+            else:
+                tty.die("external package {package} from manager {manager} has version {version} incompatible with spec {spec}".format(package=package_name, manager=manager.manager_name(), version=package_version, spec=self))
+            if set_version:
+                self.versions = VersionList([package_version])
+                changed = True
+            if changed:
+                return changed
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
