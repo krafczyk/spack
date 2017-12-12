@@ -1738,9 +1738,9 @@ class Spec(object):
                         if VersionList([package_version]).satisfies(self.versions):
                             package_manager = manager_name
                             break
-            if (package_manager is not None) and \
-	       (package_name is not None) and \
-	       (package_version is not None):
+                if (package_manager is not None) and \
+	           (package_name is not None) and \
+	           (package_version is not None):
                       # Change to external
                       self.variants['external'].value = "{manager}:{package}".format(manager=package_manager, package=package_name)
                       # set version

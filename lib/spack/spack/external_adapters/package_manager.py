@@ -122,11 +122,12 @@ class PackageManager(object):
             # Pass out a plain rule. i.e. same name as spack package, no version translation
             rule_candidates.append([spec.name, ''])
         if len(rule_candidates) > 1:
-            message = "There were multiple matching plain rules or regex rules for the package %s.\n" % spec.name
+            message = "There were multiple matching plain rules or regex rules for the package {}.\n".format(spec)
             message += "They were:\n"
             for rule in rule_candidates:
                 message += "    %s\n" % rule
-            tty.die(message)
+            tty.debug(message)
+            return []
         return rule_candidates
 
     def check_package_name(self, spec, package_name):
@@ -141,7 +142,10 @@ class PackageManager(object):
         # Expect a spec object
 
         # We need to find a matching package in the external repo
-        [ package_name, version_demangle] = self.get_package_translation_rules(spec)[0]
+        rules = self.get_package_translation_rules(spec)
+        if len(rules) != 1:
+            return None
+        [ package_name, version_demangle] = rules[0]
         package_list = self.list()
         for package_info in package_list:
             if package_name == package_info[0]:
@@ -151,7 +155,7 @@ class PackageManager(object):
                     if match:
                         package_version = match.group(1)
                     else:
-                        tty.warn("Problem using version extraction! falling back to full version")
+                        tty.debug("Problem using version extraction! falling back to full version")
                 if package_version is None:
                     package_version = package_info[1]
                 return [ package_name, package_version ]
