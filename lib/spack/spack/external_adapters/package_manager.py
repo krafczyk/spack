@@ -140,13 +140,14 @@ class PackageManager(object):
                             package_candidates.append(replace_vars(shim_package_pattern, package, matched))
 
         if len(package_candidates) == 0:
-            tty.die("There was no appropriate plain rule nor regex rule for the package %s." % spec.name)
+            return None
         if len(package_candidates) > 1:
             message = "There were multiple matching plain rules or regex rules for the package %s.\n" % spec.name
             message += "They were:\n"
             for package in package_candidates:
                 message += "    %s\n" % package
-            tty.die(message)
+            tty.error(message)
+            return None
 
         return package_candidates[0]
 

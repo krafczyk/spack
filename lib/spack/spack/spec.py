@@ -1730,10 +1730,15 @@ class Spec(object):
                           tty.die("Manager {manager} in manager_affinity list is not an available package manager.".format(manager=manager_name))
                       package_name = manager.get_package_name(self)
                       if package_name is not None:
-                          package_manager = manager_name
-                          break
+                          package_version = manager.get_package_version(package_name)
+                          if Version(package_version).satisfies(self.version):
+                              package_manager = manager_name
+                              break
                  if (package_manager is not None) and (package_name is not None):
+                      # Change to external
                       self.variants['external'].value = "{manager}:{package}".format(manager=package_manager, package=package_name)
+                      # Trim dependencies
+                      self._dependencies = DependencyMap()
                       return True
 
         # Concretize deps first -- this is a bottom-up process.
