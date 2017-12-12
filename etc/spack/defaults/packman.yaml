@@ -29,6 +29,13 @@ packman:
         package: "python"
       - spec: "python@2:2.999"
         package: "python2"
+    py-setuptools:
+      - spec: "py-setuptools^python@3:"
+        package: "python-setuptools"
+        version-demangle: "1:(.*)"
+      - spec: "py-setuptools^python@2:2.999"
+        package: "python2-setuptools"
+        version-demangle: "1:(.*)"
     regex-matching-list:
       - name: 'py-(.*)'
         shims:
