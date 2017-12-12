@@ -32,6 +32,7 @@ import spack
 import spack.store
 import spack.hooks
 import spack.store
+from spack.util.decorators import memoize_class
 
 def replace_vars(in_string, package, match):
     in_string = in_string.replace('${PACKAGE}', package)
@@ -189,6 +190,14 @@ class PackageManager(object):
     def list(self, search_item=None):
         "Query the system package manager for a list of installed packages"
         pass
+
+    @memoize_class
+    def get_package_version(self, package_name):
+        package_list = self.list()
+        for package_info in package_list:
+            if package_name == package_info[0]:
+                return package_info[1]
+        return None
 
     def file_list(self, package_name):
         "Get list of files associated with an installed system package"
