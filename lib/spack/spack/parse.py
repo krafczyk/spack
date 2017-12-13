@@ -130,12 +130,18 @@ class Parser(object):
             iter(iterable), iter([self.next]), self.tokens)
         self.gettok()
 
-    def accept(self, id):
+    def accept(self, id_list):
         """Put the next symbol in self.token if accepted, then call gettok()"""
-        if self.next and self.next.is_a(id):
-            self.token = self.next
-            self.gettok()
-            return True
+        if self.next:
+            ok = False
+            for id in id_list:
+                if self.next.is_a(id):
+                    ok = True
+                    break
+            if ok:
+                self.token = self.next
+                self.gettok()
+                return True
         return False
 
     def next_token_error(self, message):
@@ -149,9 +155,9 @@ class Parser(object):
     def unexpected_token(self):
         self.next_token_error("Unexpected token")
 
-    def expect(self, id):
+    def expect(self, id_list):
         """Like accept(), but fails if we don't like the next token."""
-        if self.accept(id):
+        if self.accept(id_list):
             return True
         else:
             if self.next:

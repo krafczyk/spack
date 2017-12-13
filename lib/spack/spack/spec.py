@@ -3357,9 +3357,9 @@ class SpecParser(spack.parse.Parser):
         try:
             while self.next:
                 # TODO: clean this parsing up a bit
-                if self.accept(ID):
+                if self.accept([ID]):
                     self.previous = self.token
-                    if self.accept(EQ):
+                    if self.accept([EQ]):
                         # We're parsing an anonymous spec beginning with a
                         # key-value pair.
                         if not specs:
@@ -3384,11 +3384,11 @@ class SpecParser(spack.parse.Parser):
                         # We're parsing a new spec by name
                         self.previous = None
                         specs.append(self.spec(self.token.value))
-                elif self.accept(HASH):
+                elif self.accept([HASH]):
                     # We're finding a spec by hash
                     specs.append(self.spec_by_hash())
 
-                elif self.accept(DEP):
+                elif self.accept([DEP]):
                     if not specs:
                         # We're parsing an anonymous spec beginning with a
                         # dependency. Push the token to recover after creating
@@ -3396,13 +3396,13 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                         specs.append(self.spec(None))
                     else:
-                        if self.accept(HASH):
+                        if self.accept([HASH]):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
                         else:
                             # We're adding a dependency to the last spec
-                            self.expect(ID)
+                            self.expect([ID])
                             dep = self.spec(self.token.value)
 
                         # Raise an error if the previous spec is already
@@ -3416,7 +3416,7 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
-                    if self.next.type in (AT, ON, OFF, PCT):
+                    if self.accept([AT, ON, OFF, PCT]):
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
                         if specs and specs[-1]._hash:
@@ -3445,7 +3445,7 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
     def spec_by_hash(self):
-        self.expect(ID)
+        self.expect([ID])
 
         specs = spack.store.db.query()
         matches = [spec for spec in specs if
@@ -3503,28 +3503,28 @@ class SpecParser(spack.parse.Parser):
         added_version = False
 
         while self.next:
-            if self.accept(AT):
+            if self.accept([AT]):
                 vlist = self.version_list()
                 for version in vlist:
                     spec._add_version(version)
                 added_version = True
 
-            elif self.accept(ON):
+            elif self.accept([ON]):
                 name = self.variant()
                 spec.variants[name] = BoolValuedVariant(name, True)
 
-            elif self.accept(OFF):
+            elif self.accept([OFF]):
                 name = self.variant()
                 spec.variants[name] = BoolValuedVariant(name, False)
 
-            elif self.accept(PCT):
+            elif self.accept([PCT]):
                 spec._set_compiler(self.compiler())
 
-            elif self.accept(ID):
+            elif self.accept([ID]):
                 self.previous = self.token
-                if self.accept(EQ):
+                if self.accept([EQ]):
                     # We're adding a key-value pair to the spec
-                    self.expect(VAL)
+                    self.expect([VAL])
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
@@ -3534,7 +3534,7 @@ class SpecParser(spack.parse.Parser):
                     self.previous = None
                     break
 
-            elif self.accept(HASH):
+            elif self.accept([HASH]):
                 # Get spec by hash and confirm it matches what we already have
                 hash_spec = self.spec_by_hash()
                 if hash_spec.satisfies(spec):
@@ -3556,18 +3556,18 @@ class SpecParser(spack.parse.Parser):
         if name:
             return name
         else:
-            self.expect(ID)
+            self.expect([ID])
             self.check_identifier()
             return self.token.value
 
     def version(self):
         start = None
         end = None
-        if self.accept(ID):
+        if self.accept([ID]):
             start = self.token.value
 
-        if self.accept(COLON):
-            if self.accept(ID):
+        if self.accept([COLON]):
+            if self.accept([ID]):
                 if self.next and self.next.type is EQ:
                     # This is a start: range followed by a key=value pair
                     self.push_tokens([self.token])
@@ -3589,18 +3589,18 @@ class SpecParser(spack.parse.Parser):
     def version_list(self):
         vlist = []
         vlist.append(self.version())
-        while self.accept(COMMA):
+        while self.accept([COMMA]):
             vlist.append(self.version())
         return vlist
 
     def compiler(self):
-        self.expect(ID)
+        self.expect([ID])
         self.check_identifier()
 
         compiler = CompilerSpec.__new__(CompilerSpec)
         compiler.name = self.token.value
         compiler.versions = VersionList()
-        if self.accept(AT):
+        if self.accept([AT]):
             vlist = self.version_list()
             for version in vlist:
                 compiler._add_version(version)
