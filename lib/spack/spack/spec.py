@@ -3415,7 +3415,6 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                         spec_stack.append(self.spec(None))
                     else:
-                        print("1")
                         descend = False
                         dep = None
                         if self.accept([HASH]):
@@ -3423,21 +3422,14 @@ class SpecParser(spack.parse.Parser):
                             # anonymous spec
                             dep = self.spec_by_hash()
                         else:
-                            print("2")
                             # We're adding a dependency to the last spec
                             self.expect([ID,OPAREN])
-                            print("3: {}".format(self.token.value))
-                            print("3 1: {}".format(self.token.type))
                             if self.token.type == ID:
-                                print("4")
                                 dep = self.spec(self.token.value)
                             elif self.token.type == OPAREN:
-                                print("5")
                                 self.expect([ID])
-                                print(self.token.value)
                                 dep = self.spec(self.token.value)
                                 descend = True
-                        print("6")
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
                         if spec_stack[-1]._hash:
