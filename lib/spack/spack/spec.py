@@ -3203,7 +3203,17 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def dep_string(self):
-        return ''.join("^" + dep.format() for dep in self.sorted_deps())
+        if len(self._dependencies) == 0:
+            return ''
+        else:
+            dep_bits = []
+            for dep_name in self._dependencies:
+                dep = self._dependencies[dep_name].spec
+                if len(dep._dependencies) == 0:
+                    dep_bits.append("^" + dep.__str__())
+                else:
+                    dep_bits.append("^(" + dep.__str__()+")")
+            return ''.join(dep_bits)
 
     def __str__(self):
         ret = self.format() + self.dep_string()
