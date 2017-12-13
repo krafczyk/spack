@@ -3372,7 +3372,7 @@ class SpecParser(spack.parse.Parser):
                         else:
                             if spec_stack[-1].concrete:
                                 # Trying to add k-v pair to spec from hash
-                                raise RedundantSpecError(specs[-1],
+                                raise RedundantSpecError(spec_stack[-1],
                                                          'key-value pair')
                             # We should never end up here.
                             # This requires starting a new spec with ID, EQ
