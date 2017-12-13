@@ -3399,6 +3399,12 @@ class SpecParser(spack.parse.Parser):
                         specs.append(spec_stack[0])
                         spec_stack = []
                     spec_stack.append(self.spec_by_hash())
+                elif self.accept([CPAREN]):
+                    # For now lets only support this if a spec is already on the stack.
+                    if len(spec_stack) <= 1:
+                        raise ImproperParenthesesError()
+                    else:
+                        spec_stack.pop()
 
                 elif self.accept([DEP]):
                     ##if not specs:
@@ -3409,15 +3415,29 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                         spec_stack.append(self.spec(None))
                     else:
+                        print("1")
+                        descend = False
+                        dep = None
                         if self.accept([HASH]):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
                         else:
+                            print("2")
                             # We're adding a dependency to the last spec
-                            self.expect([ID])
-                            dep = self.spec(self.token.value)
-
+                            self.expect([ID,OPAREN])
+                            print("3: {}".format(self.token.value))
+                            print("3 1: {}".format(self.token.type))
+                            if self.token.type == ID:
+                                print("4")
+                                dep = self.spec(self.token.value)
+                            elif self.token.type == OPAREN:
+                                print("5")
+                                self.expect([ID])
+                                print(self.token.value)
+                                dep = self.spec(self.token.value)
+                                descend = True
+                        print("6")
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
                         if spec_stack[-1]._hash:
@@ -3425,6 +3445,8 @@ class SpecParser(spack.parse.Parser):
                         # command line deps get empty deptypes now.
                         # Real deptypes are assigned later per packages.
                         spec_stack[-1]._add_dependency(dep, ())
+                        if descend:
+                            spec_stack.append(dep)
 
                 else:
                     # If the next token can be part of a valid anonymous spec,
@@ -3828,6 +3850,12 @@ class RedundantSpecError(SpecError):
             " This is likely the result of adding to a spec specified by hash."
             % (addition, spec))
 
+
+class ImproperParenthesesError(SpecError):
+    def __init__(self):
+        super(ImproperParenthesesError, self).__init__(
+            "Open Parentheses need to follow a dependency symbol, and "
+            "Closed Parentheses need to have an accompanying open.")
 
 class ConflictsInSpecError(SpecError, RuntimeError):
     def __init__(self, spec, matches):
