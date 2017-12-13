@@ -3355,6 +3355,7 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
+        spec_stack = []
 
         try:
             while self.next:
@@ -3364,12 +3365,12 @@ class SpecParser(spack.parse.Parser):
                     if self.accept([EQ]):
                         # We're parsing an anonymous spec beginning with a
                         # key-value pair.
-                        if not specs:
+                        if len(spec_stack) == 0:
                             self.push_tokens([self.previous, self.token])
                             self.previous = None
-                            specs.append(self.spec(None))
+                            spec_stack.append(self.spec(None))
                         else:
-                            if specs[-1].concrete:
+                            if spec_stack[-1].concrete:
                                 # Trying to add k-v pair to spec from hash
                                 raise RedundantSpecError(specs[-1],
                                                          'key-value pair')
@@ -3385,18 +3386,28 @@ class SpecParser(spack.parse.Parser):
                     else:
                         # We're parsing a new spec by name
                         self.previous = None
-                        specs.append(self.spec(self.token.value))
+                        # add old spec to specs
+                        if len(spec_stack) > 0:
+                            specs.append(spec_stack[0])
+                            # empty spec stack
+                            spec_stack = []
+                        # Add new spec to the stack
+                        spec_stack.append(self.spec(self.token.value))
                 elif self.accept([HASH]):
                     # We're finding a spec by hash
-                    specs.append(self.spec_by_hash())
+                    if len(spec_stack) > 0:
+                        specs.append(spec_stack[0])
+                        spec_stack = []
+                    spec_stack.append(self.spec_by_hash())
 
                 elif self.accept([DEP]):
-                    if not specs:
+                    ##if not specs:
+                    if len(spec_stack) == 0:
                         # We're parsing an anonymous spec beginning with a
                         # dependency. Push the token to recover after creating
                         # anonymous spec
                         self.push_tokens([self.token])
-                        specs.append(self.spec(None))
+                        spec_stack.append(self.spec(None))
                     else:
                         if self.accept([HASH]):
                             # We're finding a dependency by hash for an
@@ -3409,11 +3420,11 @@ class SpecParser(spack.parse.Parser):
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1], 'dependency')
+                        if spec_stack[-1]._hash:
+                            raise RedundantSpecError(current_spec, 'dependency')
                         # command line deps get empty deptypes now.
                         # Real deptypes are assigned later per packages.
-                        specs[-1]._add_dependency(dep, ())
+                        spec_stack[-1]._add_dependency(dep, ())
 
                 else:
                     # If the next token can be part of a valid anonymous spec,
@@ -3421,16 +3432,19 @@ class SpecParser(spack.parse.Parser):
                     if self.accept([AT, ON, OFF, PCT]):
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
-                        if specs and specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1],
+                        if len(spec_stack) != 0 and spec_stack[-1]._hash:
+                            raise RedundantSpecError(spec_stack[-1],
                                                      'compiler, version, '
                                                      'or variant')
-                        specs.append(self.spec(None))
+                        spec_stack.append(self.spec(None))
                     else:
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
+
+        if len(spec_stack) != 0:
+            specs.append(spec_stack[0])
 
         # If the spec has an os or a target and no platform, give it
         # the default platform
