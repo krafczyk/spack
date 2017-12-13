@@ -3304,7 +3304,7 @@ class LazySpecCache(collections.defaultdict):
 #
 # These are possible token types in the spec grammar.
 #
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL = range(11)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, OPAREN, CPAREN = range(13)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -3321,6 +3321,8 @@ class SpecLexer(spack.parse.Lexer):
             (r'\+', lambda scanner, val: self.token(ON,    val)),
             (r'\-', lambda scanner, val: self.token(OFF,   val)),
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
+            (r'\(', lambda scanner, val: self.token(OPAREN,   val)),
+            (r'\)', lambda scanner, val: self.token(CPAREN,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
             # This is more liberal than identifier_re (see above).
