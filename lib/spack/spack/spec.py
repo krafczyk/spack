@@ -3453,13 +3453,17 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
-                    if self.accept([AT, ON, OFF, PCT]):
+                    if self.next.type in (AT, ON, OFF, PCT):
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
                         if len(spec_stack) != 0 and spec_stack[-1]._hash:
                             raise RedundantSpecError(spec_stack[-1],
                                                      'compiler, version, '
                                                      'or variant')
+                        if len(spec_stack) != 0:
+                            specs.append(spec_stack[0])
+                            spec_stack = []
+
                         spec_stack.append(self.spec(None))
                     else:
                         self.unexpected_token()
