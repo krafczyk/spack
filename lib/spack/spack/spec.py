@@ -2501,7 +2501,7 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
-    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
+    def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
         There are two senses for satisfies:
