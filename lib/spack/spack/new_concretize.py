@@ -47,24 +47,37 @@ class DependencyEnumeration(OptionEnumeration):
     def __init__(self):
         super(DependencyEnumeration, self).__init__()
 
+class DependencyEncapsulation(object):
+    """This object encapsulates all relavant information about a dependency"""
+    def __init__(self, dep_spec, dep_type, clause):
+        self.dep_spec = dep_spec # A spec of requirements for the dep itself
+        self.dep_type = dep_type # The type of dependency it is
+        self.clause = clause # clause which must be satisfied for this dependency to be used
+
+    def __eq__(self, rhs):
+        if self.dep_spec == rhs.dep_spec and \
+           self.dep_type == rhs.dep_type and \
+           self.clause == rhs.clause:
+            return True
+        else:
+            return False
+
 class PackageEnumeration(object):
     """We will contain a package's current state"""
     def __init__(self, spec):
         # Check that the spec exists or is virtual
         self._name = spec.name
         self._init_spec = spec
-        self._initial_version_constraints = []
-        self._initial_compiler_constraints = []
-        self._initial_variant_constraints = []
-        self._dependencies_with_clauses = []
-        self._required_constraints = []
-        self._active = True
+        self._initial_version_constraints = [] # contains the initial set of constraints on the package version
+        self._initial_compiler_constraints = [] # contains the initial set of constraints on the compiler version
+        self._initial_variant_constraints = [] # contains the initial set of constraints on the variants
+        self._dependencies_by_package = {} # contains a dictionary of possible dependencies by package
 
         self.add_constraints_from_spec(spec)
 
-    def add_dependency_and_clause(self, dependency, clause=""):
-        new_item = [dependency, clause]
-        return add_to_list(new_item, self._dependencies_with_clauses)
+    def add_dependency(self, dependency):
+        dep_name = dependency.dep_spec.name
+        return add_to_list(dependency, self._dependencies_by_package.setdefault(dep_name, []))
 
     def add_constraints_from_spec(self, spec):
         changed = False
@@ -79,15 +92,30 @@ class PackageEnumeration(object):
     def show(self):
         print("Package: {}".format(self._name))
         print("Known initial constraints:")
-        print("Version:")
-        for constraint in self._initial_version_constraints:
-            print(constraint)
-        print("Compiler:")
-        for constraint in self._initial_compiler_constraints:
-            print(constraint)
-        print("Variants:")
-        for constraint in self._initial_variant_constraints:
-            print(constraint)
+        print_version = False
+        if len(self._initial_version_constraints) == 1:
+            if self._initial_version_constraints[0].__str__() != ":":
+                print_version = True
+        else:
+            print_version = True
+        if print_version:
+            print("Version:")
+            for constraint in self._initial_version_constraints:
+                if constraint.__str__() != ":":
+                    print(constraint)
+        if len(self._initial_compiler_constraints) != 0:
+            print("Compiler:")
+            for constraint in self._initial_compiler_constraints:
+                print(constraint)
+        if len(self._initial_variant_constraints) != 0:
+            print("Variants:")
+            for constraint in self._initial_variant_constraints:
+                print(constraint)
+        print("Possible Dependencies:")
+        for package_name in self._dependencies_by_package:
+            print("{} dependencies:".format(package_name))
+            for dependency in self._dependencies_by_package[package_name]:
+                print("clause: {} dep: {} type: {}".format(dependency.clause, dependency.dep_spec, dependency.dep_type))
 
 class VirtualPackageEnumeration(object):
     """We will contain a package's current state"""
@@ -96,6 +124,9 @@ class VirtualPackageEnumeration(object):
         self._name = spec.name
         self._possible_providers = []
         self._active = True
+
+    def add_provider(self, provider):
+        return add_to_list(provider, self._possible_providers)
 
     def show(self):
         print("Virtual Package: {}".format(self._name))
@@ -173,9 +204,9 @@ class Concretizer(object):
                 pkg = package._init_spec.package
 
                 for dep_name in pkg.dependencies:
-                    # Add dep_name package
                     dep_name_spec = spack.spec.Spec(dep_name)
                     if dep_name_spec.virtual:
+                        # Add dependent virtual package by plain name
                         dep_package = self.get_virtual_package(dep_name)
                         if dep_package is None:
                             dep_package = VirtualPackageEnumeration(dep_name_spec)
@@ -183,18 +214,29 @@ class Concretizer(object):
                             changed = True
 
                     else:
+                        # Add dependent package by plain name
                         dep_package = self.get_package(dep_name)
                         if dep_package is None:
                             dep_package = PackageEnumeration(dep_name_spec)
                             self._packages.append(dep_package)
                             changed = True
 
-                        changed |= dep_package.add_constraints_from_spec(dep_name_spec)
+                    # Add full description of dependencies to package
+                    for clause in pkg.dependencies[dep_name]:
+                        full_dep = pkg.dependencies[dep_name][clause]
+                        changed |= package.add_dependency(DependencyEncapsulation(full_dep.spec, full_dep.type, clause))
 
-                        for dep_clause in pkg.dependencies[dep_name]:
-                            dep_clause_spec = spack.spec.Spec(dep_clause)
-                            #dep = pkg.dependencies[dep_name][dep_clause]
-                            changed |= package.add_dependency_and_clause(dep_name_spec, dep_clause_spec)
+
+            for package in self._virtual_packages:
+                package_spec = package._name
+                # Find providers for virtual packages
+                for provider in spack.repo.providers_for(package_spec):
+                    changed |= package.add_provider(provider)
+                    provider_package = self.get_package(provider.name)
+                    if provider_package is None:
+                        provider_package = PackageEnumeration(provider)
+                        self._packages.append(provider_package)
+                        changed = True
 
             if not changed:
                 break
@@ -239,7 +281,7 @@ class Concretizer(object):
             package.show()
         print("Virtual packages which might be in tree:")
         for package in self._virtual_packages:
-            print(package._name)
+            package.show()
 
 
 
