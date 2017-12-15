@@ -30,17 +30,22 @@ def add_to_list(item, the_list):
 class OptionEnumeration(object):
     """Here we detail options for a package"""
     def __init__(self):
-        pass
+        self.options = []
+
+    def add_option(self, item):
+        self.options.append(item)
 
 class VariantEnumeration(OptionEnumeration):
     """This is for variants of a package"""
-    def __init__(self):
+    def __init__(self, variant):
         super(VariantEnumeration, self).__init__()
 
-class DependencyEnumeration(OptionEnumeration):
-    """This is for dependencies of a package"""
-    def __init__(self):
-        super(DependencyEnumeration, self).__init__()
+        self.name = variant.name
+        self.values = variant.values
+        self.default = variant.default
+        if self.values is not None:
+            for value in self.values:
+                self.add_option(value)
 
 class DependencyEnumeration(OptionEnumeration):
     """This is for dependencies of a package"""
@@ -72,6 +77,7 @@ class PackageEnumeration(object):
         self._initial_compiler_constraints = [] # contains the initial set of constraints on the compiler version
         self._initial_variant_constraints = [] # contains the initial set of constraints on the variants
         self._dependencies_by_package = {} # contains a dictionary of possible dependencies by package
+        self._variants = [] # A list of variants for this package
 
         self.add_constraints_from_spec(spec)
 
@@ -88,6 +94,13 @@ class PackageEnumeration(object):
         if spec.variants:
             changed |= add_to_list(spec.variants, self._initial_variant_constraints)
         return changed
+
+    def add_variant(self, variant):
+        for var in self._variants:
+            if var.name == variant.name:
+                return False
+        self._variants.append(VariantEnumeration(variant))
+        return True
 
     def show(self):
         print("Package: {}".format(self._name))
@@ -116,6 +129,11 @@ class PackageEnumeration(object):
             print("{} dependencies:".format(package_name))
             for dependency in self._dependencies_by_package[package_name]:
                 print("clause: {} dep: {} type: {}".format(dependency.clause, dependency.dep_spec, dependency.dep_type))
+        print("Possible Variant Settings:")
+        for variant in self._variants:
+            print("Variant {}:".format(variant.name))
+            for option in variant.options:
+                print(option)
 
 class VirtualPackageEnumeration(object):
     """We will contain a package's current state"""
@@ -196,7 +214,7 @@ class Concretizer(object):
                 package.add_constraints_from_spec(spec)
             needed_dep_list.pop(0)
 
-        #Crawl through each package and add missing dependencies and constraints
+        #Crawl through each package and add missing dependencies, constraints, and variants
         while True:
             changed = False
 
@@ -226,6 +244,9 @@ class Concretizer(object):
                         full_dep = pkg.dependencies[dep_name][clause]
                         changed |= package.add_dependency(DependencyEncapsulation(full_dep.spec, full_dep.type, clause))
 
+                for variant_name in pkg.variants:
+                    variant = pkg.variants[variant_name]
+                    changed |= package.add_variant(variant)
 
             for package in self._virtual_packages:
                 package_spec = package._name
