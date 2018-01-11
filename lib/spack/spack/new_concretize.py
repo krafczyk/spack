@@ -35,6 +35,11 @@ class OptionEnumeration(object):
     def add_option(self, item):
         self.options.append(item)
 
+    def prioritize_option(self, item):
+        # Move option to the front of the list
+        self.options.remove(item)
+        self.options.insert(0, item)
+
 class VariantEnumeration(OptionEnumeration):
     """This is for variants of a package"""
     def __init__(self, variant):
@@ -46,6 +51,7 @@ class VariantEnumeration(OptionEnumeration):
         if self.values is not None:
             for value in self.values:
                 self.add_option(value)
+            self.prioritize_option(self.default)
 
 class DependencyEnumeration(OptionEnumeration):
     """This is for dependencies of a package"""
@@ -71,7 +77,7 @@ class PackageEnumeration(object):
     """We will contain a package's current state"""
     def __init__(self, spec):
         # Check that the spec exists or is virtual
-        self._name = spec.name
+        self.name = spec.name
         self._init_spec = spec
         self._initial_version_constraints = [] # contains the initial set of constraints on the package version
         self._initial_compiler_constraints = [] # contains the initial set of constraints on the compiler version
@@ -81,11 +87,64 @@ class PackageEnumeration(object):
 
         self.add_constraints_from_spec(spec)
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+        self._spec = spack.spack.Spec(self._name)
+
+    @property
+    def spec(self):
+        return self._spec
+
+    def build_options(self):
+        pkg_versions = self.spec.package_class.versions
+        usable = [v for v in pkg_versions
+                  if any(v.satisfies(sv) for sv in self._init_spec.versions)]
+
+        yaml_prefs = PackagePrefs(self.name, 'version')
+
+        # The keys below show the order of precedence of factors used
+        # to select a version when concretizing.  The item with
+        # the "largest" key will be selected.
+        #
+        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
+        #       larger than other versions.  BUT when CONCRETIZING,
+        #       the largest NON-develop version is selected by default.
+        keyfn = lambda v: (
+            # ------- Special direction from the user
+            # Respect order listed in packages.yaml
+            -yaml_prefs(v),
+
+            # The preferred=True flag (packages or packages.yaml or both?)
+            pkg_versions.get(Version(v)).get('preferred', False),
+
+            # ------- Regular case: use latest non-develop version by default.
+            # Avoid @develop version, which would otherwise be the "largest"
+            # in straight version comparisons
+            not v.isdevelop(),
+
+            # Compare the version itself
+            # This includes the logic:
+            #    a) develop > everything (disabled by "not v.isdevelop() above)
+            #    b) numeric > non-numeric
+            #    c) Numeric or string comparison
+            v)
+        usable.sort(key=keyfn, reverse=True)
+
+        print("Known package versions for spec: {}".format(self.spec))
+        for v in usable:
+            print(v)
+
     def add_dependency(self, dependency):
         dep_name = dependency.dep_spec.name
         return add_to_list(dependency, self._dependencies_by_package.setdefault(dep_name, []))
 
     def add_constraints_from_spec(self, spec):
+        return self._init_spec.constrain(spec)
         changed = False
         if spec.versions:
             changed |= add_to_list(spec.versions, self._initial_version_constraints)
@@ -104,26 +163,27 @@ class PackageEnumeration(object):
 
     def show(self):
         print("Package: {}".format(self._name))
-        print("Known initial constraints:")
-        print_version = False
-        if len(self._initial_version_constraints) == 1:
-            if self._initial_version_constraints[0].__str__() != ":":
-                print_version = True
-        else:
-            print_version = True
-        if print_version:
-            print("Version:")
-            for constraint in self._initial_version_constraints:
-                if constraint.__str__() != ":":
-                    print(constraint)
-        if len(self._initial_compiler_constraints) != 0:
-            print("Compiler:")
-            for constraint in self._initial_compiler_constraints:
-                print(constraint)
-        if len(self._initial_variant_constraints) != 0:
-            print("Variants:")
-            for constraint in self._initial_variant_constraints:
-                print(constraint)
+        print("Known initial required spec:")
+        print(self._init_spec)
+        #print_version = False
+        #if len(self._initial_version_constraints) == 1:
+        #    if self._initial_version_constraints[0].__str__() != ":":
+        #        print_version = True
+        #else:
+        #    print_version = True
+        #if print_version:
+        #    print("Version:")
+        #    for constraint in self._initial_version_constraints:
+        #        if constraint.__str__() != ":":
+        #            print(constraint)
+        #if len(self._initial_compiler_constraints) != 0:
+        #    print("Compiler:")
+        #    for constraint in self._initial_compiler_constraints:
+        #        print(constraint)
+        #if len(self._initial_variant_constraints) != 0:
+        #    print("Variants:")
+        #    for constraint in self._initial_variant_constraints:
+        #        print(constraint)
         print("Possible Dependencies:")
         for package_name in self._dependencies_by_package:
             print("{} dependencies:".format(package_name))
@@ -139,9 +199,17 @@ class VirtualPackageEnumeration(object):
     """We will contain a package's current state"""
     def __init__(self, spec):
         # Check that the spec exists or is virtual
-        self._name = spec.name
+        self.name = spec.name
         self._possible_providers = []
         self._active = True
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     def add_provider(self, provider):
         return add_to_list(provider, self._possible_providers)
@@ -174,22 +242,27 @@ class Concretizer(object):
             self.add_spec(spec)
 
         self.create_package_representations()
+        self.build_options()
 
     def get_package(self, name):
         for package in self._packages:
-            if package._name == name:
+            if package.name == name:
                 return package
         return None
 
     def get_virtual_package(self, name):
         for package in self._virtual_packages:
-            if package._name == name:
+            if package.name == name:
                 return package
         return None
 
+    def build_options(self):
+        for package in self._packages:
+            package.build_options()
+
     def create_package_representations(self):
         changed = False
-        
+
         leaf_list = copy.copy(self._leaf_packages)
         needed_dep_list = copy.copy(self._needed_dep_packages)
         # Add leaf packages
@@ -200,7 +273,7 @@ class Concretizer(object):
                 package = PackageEnumeration(spec)
                 self._packages.append(package)
             else:
-                package.add_constraints_from_spec(spec)
+                package._init_spec.constrain(spec)
             leaf_list.pop(0)
 
         # Add needed dep packages
@@ -249,7 +322,7 @@ class Concretizer(object):
                     changed |= package.add_variant(variant)
 
             for package in self._virtual_packages:
-                package_spec = package._name
+                package_spec = package.name
                 # Find providers for virtual packages
                 for provider in spack.repo.providers_for(package_spec):
                     changed |= package.add_provider(provider)
@@ -261,7 +334,7 @@ class Concretizer(object):
 
             if not changed:
                 break
-            
+
     def add_spec(self, spec, explicit_dep=False):
         # We're not supporting virtual packages for now.
         if spec.virtual:
@@ -282,7 +355,7 @@ class Concretizer(object):
         pkg = spec.package
         existing_package = None
         for package in self._packages:
-            if spec.name == package._name:
+            if spec.name == package.name:
                 existing_package = package
         if existing_package is not None:
             existing_package.add_constraints_from_spec(spec)
@@ -303,8 +376,6 @@ class Concretizer(object):
         print("Virtual packages which might be in tree:")
         for package in self._virtual_packages:
             package.show()
-
-
 
     def concretize(self):
         # First

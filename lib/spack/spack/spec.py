@@ -143,6 +143,8 @@ from spack.version import VersionList, VersionRange, Version, ver
 from spack.external_adapters import get_package_manager
 from yaml.error import MarkedYAMLError
 
+import traceback
+
 __all__ = [
     'Spec',
     'parse',
