@@ -16,6 +16,10 @@ class AnonymousSpecsUnsupported(spack.error.SpackError):
     def __init__(self):
         super(VirtualPacakgesUnsupported, self).__init__("""This method does not support anonymous specs for now.""")
 
+class NoVersions(spack.error.SpackError):
+    def __init__(self):
+        super(NoVersions, self).__init__("""No versions were found for this package!""")
+
 class IncorrectSpecType(spack.error.SpackError):
     def __init__(self):
         super(IncorrectSpecType, self).__init__("""The incorrect spec was passed!""")
@@ -100,8 +104,8 @@ class PackageEnumeration(object):
     def spec(self):
         return self._spec
 
-    def build_options(self):
-        pkg_versions = self.spec.package_class.versions
+    def initialize_build_options(self):
+        pkg_versions = self._init_spec.package_class.versions
         usable = [v for v in pkg_versions
                   if any(v.satisfies(sv) for sv in self._init_spec.versions)]
 
@@ -135,9 +139,17 @@ class PackageEnumeration(object):
             v)
         usable.sort(key=keyfn, reverse=True)
 
-        print("Known package versions for spec: {}".format(self.spec))
-        for v in usable:
-            print(v)
+        # Test for empty version list
+        if len(usable) == 0:
+            print("Package version:")
+            if not self._init_spec.versions.concrete:
+                print(self._init_spec.versions)
+                #raise NoVersions()
+            print(self._init_spec.version)
+        else:
+            print("Known package versions for spec: {}".format(self.spec))
+            for v in usable:
+                print(v)
 
     def add_dependency(self, dependency):
         dep_name = dependency.dep_spec.name
@@ -242,7 +254,7 @@ class Concretizer(object):
             self.add_spec(spec)
 
         self.create_package_representations()
-        self.build_options()
+        self.initialize_build_options()
 
     def get_package(self, name):
         for package in self._packages:
@@ -256,9 +268,9 @@ class Concretizer(object):
                 return package
         return None
 
-    def build_options(self):
+    def initialize_build_options(self):
         for package in self._packages:
-            package.build_options()
+            package.initialize_build_options()
 
     def create_package_representations(self):
         changed = False
