@@ -41,7 +41,7 @@ class PyH5py(PythonPackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     # Build dependencies
-    depends_on('py-cython@0.19:', type='build')
+    depends_on('py-cython@0.19:', type=('build', 'run'))
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('hdf5@1.8.4:+hl')
