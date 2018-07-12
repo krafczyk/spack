@@ -57,6 +57,9 @@ class Libxcb(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('python', type='build')
+
+    patch('libxcb-1.12-python-3.5.x.patch', when="^python@3.5:")
 
     def patch(self):
         filter_file(
