@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+from llnl.util import tty
 
 class Fenics(CMakePackage):
     """FEniCS is organized as a collection of interoperable components
@@ -69,7 +69,7 @@ class Fenics(CMakePackage):
 
     patch('petsc-3.7.patch', when='@1.6.1^petsc@3.7:')
     patch('petsc-version-detection.patch', when='@:1.6.1')
-    patch('hdf5~cxx-detection.patch')
+    patch('hdf5~cxx-detection.patch', when="@2016:")
 
     extends('python')
 
@@ -97,6 +97,10 @@ class Fenics(CMakePackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
+    depends_on('py-instant', type=('run', 'build'))
+    depends_on('py-ffc', type=('run', 'build'))
+    depends_on('py-fiat', type=('run', 'build'))
+    depends_on('py-ufl', type=('run', 'build'))
 
     releases = [
         {
@@ -134,13 +138,13 @@ class Fenics(CMakePackage):
     for release in releases:
         version(release['version'], release['md5'], url=base_url.format(
             pkg='dolfin', version=release['version']))
-        for name, md5 in release['resources'].items():
-            resource(name=name,
-                     url=base_url.format(pkg=name, **release),
-                     md5=md5,
-                     destination='depends',
-                     when='@{version}'.format(**release),
-                     placement=name)
+        #for name, md5 in release['resources'].items():
+        #    resource(name=name,
+        #             url=base_url.format(pkg=name, **release),
+        #             md5=md5,
+        #             destination='depends',
+        #             when='@{version}'.format(**release),
+        #             placement=name)
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
@@ -190,14 +194,20 @@ class Fenics(CMakePackage):
                 self.cmake_is_on('zlib')),
         ]
 
-    @run_after('build')
-    def build_python_components(self):
-        for package in self.python_components:
-            with working_dir(join_path('depends', package)):
-                setup_py('build')
+    #def setup_environment(self, spack_env, run_env):
+    #    tty.info("setup_environment")
+    #    tty.info(self.stage)
+    #    tty.info(self.stage.source_path)
+        #spack_env.set('UFC_DIR', join_path(self.spec['py-ffc'], 'depends', 'ffc'))
 
-    @run_after('install')
-    def install_python_components(self):
-        for package in self.python_components:
-            with working_dir(join_path('depends', package)):
-                setup_py('install', '--prefix={0}'.format(self.prefix))
+    #@run_before('cmake')
+    #def setup_python_components(self):
+    #    for package in self.python_components:
+    #        with working_dir(join_path('depends', package)):
+    #            setup_py('build')
+    #            setup_py('install', '--prefix={0}'.format(self.prefix))
+
+    #@run_after('install')
+    #def install_python_components(self):
+    #    for package in self.python_components:
+    #        with working_dir(join_path('depends', package)):
