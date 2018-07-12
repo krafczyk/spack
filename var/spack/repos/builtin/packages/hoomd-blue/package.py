@@ -52,6 +52,7 @@ class HoomdBlue(CMakePackage):
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
     version('2.2.2', git=git, tag='v2.2.2', submodules=True)
     version('2.1.6', git=git, tag='v2.1.6', submodules=True)
+    version('1.3.3', git=git, tag='v1.3.3', submodules=True)
 
     variant('mpi',  default=True,  description='Compile with MPI enabled')
     variant('cuda', default=True,  description='Compile with CUDA Toolkit')
@@ -79,6 +80,7 @@ class HoomdBlue(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('cuda@7.0:', when='+cuda')
     depends_on('doxygen@1.8.5:', when='+doc', type='build')
+    depends_on('boost', type=('run', 'build'))
 
     def cmake_args(self):
         spec = self.spec
