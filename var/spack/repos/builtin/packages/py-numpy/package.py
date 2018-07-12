@@ -68,7 +68,7 @@ class PyNumpy(PythonPackage):
     variant('lapack', default=True, description='Build with LAPACK support')
 
     depends_on('python@2.7:2.8,3.4:')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build', when="@1.10:")
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
