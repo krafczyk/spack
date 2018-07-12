@@ -39,5 +39,8 @@ class XcbProto(AutotoolsPackage):
     # TODO: uncomment once build deps can be resolved separately
     # See #7646, #4145, #4063, and #2548 for details
     # extends('python')
+    depends_on('python', type=('build'))
 
     patch('xcb-proto-1.12-schema-1.patch', when='@1.12')
+    patch('xcb-proto-1.12-python-3.x.patch', when="^python@3:")
+    patch('xcb-proto-1.12-python-3.5.x.patch', when="^python@3.5:")
