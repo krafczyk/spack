@@ -11,4 +11,5 @@
 #   ~/.spack/repos.yaml
 # -------------------------------------------------------------------------
 repos:
+  - $spack/../spack-packages
   - $spack/var/spack/repos/builtin
