@@ -81,6 +81,8 @@ class OpenfoamOrg(Package):
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
 
+    version('6', 'f40aa39d4d5dfe7ea8d9a58f2625037a',
+            url=baseurl + '/OpenFOAM-6/archive/version-6.tar.gz')
     version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
     version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
@@ -111,7 +113,7 @@ class OpenfoamOrg(Package):
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
-    patch('50-etc.patch', when='@5.0:')
+    patch('50-etc.patch', when='@5.0:5.9999')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
     patch('240-etc.patch', when='@2.4.0')
