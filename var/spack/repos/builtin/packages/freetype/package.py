@@ -34,6 +34,7 @@ class Freetype(AutotoolsPackage):
     homepage = "https://www.freetype.org/index.html"
     url      = "http://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz"
 
+    version('2.9', 'd23a1b246e78890458c6672cb45eacd0')
     version('2.7.1', '78701bee8d249578d83bb9a2f3aa3616')
     version('2.7',   '337139e5c7c5bd645fe130608e0fa8b5')
     version('2.5.3', 'cafe9f210e45360279c730d27bf071e9')
