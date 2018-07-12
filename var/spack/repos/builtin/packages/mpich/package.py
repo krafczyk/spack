@@ -140,6 +140,7 @@ spack package at this time.''',
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
+        print(self.compiler)
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError(
                 'Mpich requires both C and Fortran compilers!'
