@@ -40,4 +40,13 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
-
+  freetype:
+    version: [2.9.1]
+  python:
+    version: [2.7.15]
+  py-yt:
+    version: [3.3.5]
+  py-numpy:
+    version: [1.12.0]
+  py-astropy:
+    version: [1.1.2]
