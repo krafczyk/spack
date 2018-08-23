@@ -37,6 +37,7 @@ class Rockstar(MakefilePackage):
     variant('hdf5', description='Build rockstar with HDF5 support', default=False)
 
     patch('adjust_buildscript.patch')
+    patch('rockstar_rpc.patch')
 
     depends_on('hdf5', when='+hdf5')
 

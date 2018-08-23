@@ -1,0 +1,47 @@
+diff -r b3db262e3c61 Makefile
+--- a/Makefile	Wed Aug 13 13:22:06 2014 -0500
++++ b/Makefile	Thu Aug 23 11:34:28 2018 -0500
+@@ -1,4 +1,4 @@
+-CFLAGS=-m64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_BSD_SOURCE -D_POSIX_SOURCE -D_POSIX_C_SOURCE=200809L -D_SVID_SOURCE -D_DARWIN_C_SOURCE -Wall -fno-math-errno -fPIC
+-LDFLAGS=-shared
++CFLAGS=-m64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_BSD_SOURCE -D_POSIX_SOURCE -D_POSIX_C_SOURCE=200809L -D_SVID_SOURCE -D_DARWIN_C_SOURCE -Wall -fno-math-errno -fPIC
++LDFLAGS=-shared -ltirpc
+ OFLAGS = -lm -O3 -std=c99
+ DEBUGFLAGS = -lm -g -O0 -std=c99 -Dinline= 
+@@ -56,7 +56,7 @@
+ 	cd dist; tar xzf ../rockstar.tar.gz ; perl -ne '/\#define.*VERSION\D*([\d\.rcRC-]+)/ && print $$1' Rockstar/version.h > NUMBER ; mv Rockstar Rockstar-`cat NUMBER`; tar czf rockstar-`cat NUMBER`.tar.gz Rockstar-`cat NUMBER`
+ 
+ reg:
+-	$(CC) $(CFLAGS) main.c $(CFILES) -o rockstar  $(EXTRA_FLAGS)
++	$(CC) $(CFLAGS) main.c $(CFILES) -o rockstar  $(EXTRA_FLAGS) -ltirpc
+ 
+ lib:
+ 	$(CC) $(CFLAGS) $(LDFLAGS) $(CFILES) -o librockstar.so $(OFLAGS)
+diff -r b3db262e3c61 io/io_tipsy.c
+--- a/io/io_tipsy.c	Wed Aug 13 13:22:06 2014 -0500
++++ b/io/io_tipsy.c	Thu Aug 23 11:20:31 2018 -0500
+@@ -4,8 +4,8 @@
+ #include <stdint.h>
+ #include <inttypes.h>
+ #include <math.h>
+-#include <rpc/types.h>
+-#include <rpc/xdr.h>
++#include <tirpc/rpc/types.h>
++#include <tirpc/rpc/xdr.h>
+ #include "../check_syscalls.h"
+ #include "../universal_constants.h"
+ #include "../config_vars.h"
+diff -r b3db262e3c61 io/io_tipsy.h
+--- a/io/io_tipsy.h	Wed Aug 13 13:22:06 2014 -0500
++++ b/io/io_tipsy.h	Thu Aug 23 11:20:31 2018 -0500
+@@ -1,8 +1,8 @@
+ #ifndef _IO_TIPSY_H_
+ #define _IO_TIPSY_H_
+ #define TIPSY_MAXDIM 3
+-#include <rpc/types.h>
+-#include <rpc/xdr.h>
++#include <tirpc/rpc/types.h>
++#include <tirpc/rpc/xdr.h>
+ 
+ struct tipsy_gas_particle {
+     float mass;
