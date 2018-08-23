@@ -34,6 +34,7 @@ class Pkgconf(AutotoolsPackage):
     homepage = "http://pkgconf.org/"
     url      = "http://distfiles.alpinelinux.org/distfiles/pkgconf-1.4.2.tar.xz"
 
+    version('1.5.3', sha256='d3468308553c94389dadfd10c4d1067269052b5364276a9d24a643c88485f715')
     version('1.4.2',  '678d242b4eef1754bba6a58642af10bb')
     version('1.4.0',  'c509c0dad5a70aa4bc3210557b7eafce')
     version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
