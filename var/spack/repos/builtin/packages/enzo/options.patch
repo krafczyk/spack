@@ -1,0 +1,63 @@
+diff --git a/src/enzo/Make.config.assemble b/src/enzo/Make.config.assemble
+index bac66a3..84488f6 100644
+--- a/src/enzo/Make.config.assemble
++++ b/src/enzo/Make.config.assemble
+@@ -592,6 +592,20 @@
+ 	ASSEMBLE_CUDADEBUG_DEFINES = -DECUDADEBUG
+     endif
+ 
++    # Settings for no optimization
++
++    ifeq ($(CONFIG_OPT),none)
++        ERROR_OPT = 0
++        ASSEMBLE_OPT_FLAGS = $(MACH_OPT_NONE)
++    endif
++
++    # Settings for normal optimization
++
++    ifeq ($(CONFIG_OPT),normal)
++        ERROR_OPT = 0
++        ASSEMBLE_OPT_FLAGS = $(MACH_OPT_NORMAL)
++    endif
++
+     # Settings for high conservative optimization
+ 
+     ifeq ($(CONFIG_OPT),high)
+diff --git a/src/enzo/Make.config.targets b/src/enzo/Make.config.targets
+index b55f32a..55d61e9 100644
+--- a/src/enzo/Make.config.targets
++++ b/src/enzo/Make.config.targets
+@@ -135,6 +135,8 @@ help-config:
+ 	@echo "      gmake opt-warn"
+ 	@echo "      gmake opt-debug"
+ 	@echo "      gmake opt-cudadebug  (cuda device software emulation)"
++	@echo "      gmake opt-none"
++	@echo "      gmake opt-normal"
+ 	@echo "      gmake opt-high"
+ 	@echo "      gmake opt-aggressive"
+ 	@echo
+@@ -273,7 +275,7 @@ show-config:
+ 	@echo "   CONFIG_ECUDA  [cuda-{yes,no}]                             : $(CONFIG_ECUDA)"
+ 	@echo "   CONFIG_OOC_BOUNDARY  [ooc-boundary-{yes,no}]              : $(CONFIG_OOC_BOUNDARY)"
+ 	@echo "   CONFIG_ACCELERATION_BOUNDARY  [acceleration-boundary-{yes,no}]              : $(CONFIG_ACCELERATION_BOUNDARY)"
+-	@echo "   CONFIG_OPT  [opt-{warn,debug,cudadebug,high,aggressive}]  : $(CONFIG_OPT)"
++	@echo "   CONFIG_OPT  [opt-{warn,debug,cudadebug,none,normal,high,aggressive}]        : $(CONFIG_OPT)"
+ 	@echo "   CONFIG_TESTING  [testing-{yes,no}]                        : $(CONFIG_TESTING)"
+ 	@echo "   CONFIG_PHOTON  [photon-{yes,no}]                          : $(CONFIG_PHOTON)"
+ 	@echo "   CONFIG_HYPRE  [hypre-{yes,no}]                            : $(CONFIG_HYPRE)"
+@@ -726,12 +728,14 @@ CONFIG_ACCELERATION-BOUNDARY-%: suggest-clean
+ 
+ #-----------------------------------------------------------------------
+ 
+-VALID_OPT = opt-warn opt-debug opt-cudadebug opt-high opt-aggressive
++VALID_OPT = opt-warn opt-debug opt-cudadebug opt-none opt-normal opt-high opt-aggressive
+ .PHONY: $(VALID_OPT)
+ 
+ opt-warn:       CONFIG_OPT-warn
+ opt-debug:      CONFIG_OPT-debug
+ opt-cudadebug:  CONFIG_OPT-cudadebug
++opt-none:       CONFIG_OPT-none
++opt-normal:     CONFIG_OPT-normal
+ opt-high:       CONFIG_OPT-high
+ opt-aggressive: CONFIG_OPT-aggressive
+ opt-%:
