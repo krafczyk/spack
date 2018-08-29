@@ -60,6 +60,8 @@ class Enzo(Package):
     depends_on('mpi', type=('build', 'link', 'run'))
 
     patch('options.patch')
+    # Maybe only necessary for 2.5 and with gcc 8.1?
+    patch('enzo-seed-fix.patch', when="@2.5%gcc@8:")
 
     def install(self, spec, prefix):
         build_option = ""

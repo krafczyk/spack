@@ -1,0 +1,34 @@
+diff --git a/src/enzo/FSProb_RadiationSource.F90 b/src/enzo/FSProb_RadiationSource.F90
+index a162cc2..d1bab43 100644
+--- a/src/enzo/FSProb_RadiationSource.F90
++++ b/src/enzo/FSProb_RadiationSource.F90
+@@ -66,7 +66,8 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+   
+ !--------------
+ ! locals
+-  INTEGER   :: seed(12)
++  INTEGER, ALLOCATABLE   :: seed(:)
++  INTEGER :: n
+   INTG_PREC :: i, j, k, l, nsrc
+   R_PREC    :: h_nu0, etaconst, rnums(10)
+   R_PREC    :: dx, dy, dz, cellXl, cellXr, cellYl, cellYr, cellZl, cellZr
+@@ -75,6 +76,10 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+ 
+ !=======================================================================
+ 
++  ! get random_seed size and allocate it.
++  call random_seed(size = n)
++  allocate(seed(n))
++
+   ! initialize output to have all zero values, flag to success
+   eta = 0._RKIND
+   ier = 1
+@@ -204,6 +209,8 @@ subroutine FSProb_RadiationSource(eta, time, a, ProbType, NGammaDot,   &
+         
+   endif ! ProbType
+ 
++  ! Deallocate the seed.
++  deallocate(seed)
+   return
+ end subroutine FSProb_RadiationSource
+ !=======================================================================
