@@ -32,6 +32,7 @@ class Libsodium(AutotoolsPackage):
     url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.11.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    version('1.0.16', '37b18839e57e7a62834231395c8e962b')
     version('1.0.11', 'b58928d035064b2a46fb564937b83540')
     version('1.0.10', 'ea89dcbbda0b2b6ff6a1c476231870dd')
     version('1.0.3', 'b3bcc98e34d3250f55ae196822307fab')
